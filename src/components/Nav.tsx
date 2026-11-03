@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import SoundToggle from "./SoundToggle";
 
 // Edit the links here. "#name" scrolls to the section with id="name".
 const LINKS = [
@@ -51,8 +52,11 @@ export default function Nav() {
           SM
         </a>
 
-        {/* Desktop links — a small glass pill, centred */}
+        {/* Desktop links — a small glass pill, centred, with the sound toggle beside it */}
         <nav aria-label="Main" className="absolute left-1/2 hidden -translate-x-1/2 md:block">
+          <div className="absolute left-full top-1/2 ml-2 -translate-y-1/2">
+            <SoundToggle />
+          </div>
           <ul className="flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.06] p-1 backdrop-blur-md">
             {LINKS.map((l) => (
               <li key={l.label}>
@@ -76,6 +80,11 @@ export default function Nav() {
             Let’s Connect
             <Arrow className="transition-transform duration-200 group-hover:translate-x-0.5" />
           </a>
+
+          {/* Mobile: sound toggle (icon only) */}
+          <div className="md:hidden">
+            <SoundToggle compact />
+          </div>
 
           {/* Mobile menu button */}
           <button
