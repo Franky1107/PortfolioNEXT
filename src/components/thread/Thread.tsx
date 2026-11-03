@@ -454,8 +454,8 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
               }}
               style={{ opacity: 0 }}
             >
-              <line x1={c.from.x} y1={c.from.y} x2={c.to.x} y2={c.to.y} stroke="white" strokeOpacity={0.55} strokeWidth={1} />
-              <circle cx={c.to.x} cy={c.to.y} r={2.5} fill="white" />
+              <line x1={c.from.x} y1={c.from.y} x2={c.to.x} y2={c.to.y} stroke="var(--ink)" strokeOpacity={0.5} strokeWidth={1} />
+              <circle cx={c.to.x} cy={c.to.y} r={2.5} fill="var(--ink)" />
             </g>
           ))}
 
@@ -463,8 +463,8 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
           {geo.node && (
             <g ref={nodeRef} className="thread-node" transform={`translate(${geo.node.at.x} ${geo.node.at.y})`}>
               <circle className="glow" r={geo.node.r * 3.2} fill="url(#thread-glow)" />
-              <circle className="ring" r={geo.node.r} fill="black" stroke="var(--accent)" strokeWidth={1.6} />
-              <circle className="core" r={geo.node.r * 0.32} fill="white" />
+              <circle className="ring" r={geo.node.r} fill="var(--beige)" stroke="var(--accent)" strokeWidth={1.8} />
+              <circle className="core" r={geo.node.r * 0.36} fill="var(--accent)" />
             </g>
           )}
 

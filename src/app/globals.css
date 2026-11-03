@@ -9,11 +9,16 @@
   --accent: #f43f5e;
   /* Grey used by the nav pill and the "Let's Connect" button */
   --pill: #5f6267;
+  /* Background + text of the second (funnel) section */
+  --beige: #efe9dd;
+  --ink: #0a0a0a;
 }
 
 @theme inline {
   --color-accent: var(--accent);
   --color-pill: var(--pill);
+  --color-beige: var(--beige);
+  --color-ink: var(--ink);
   /* Fonts are self-hosted from npm (see src/app/layout.tsx) */
   --font-display: "Archivo Variable", "Archivo Black", system-ui, sans-serif;
   --font-sans: "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
