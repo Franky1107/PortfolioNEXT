@@ -357,8 +357,8 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
       introTween = gsap.to(intro, {
         p: 1,
         duration: THREAD.introDuration,
-        delay: intro.p === 0 ? 0.35 : 0,
-        ease: "sine.inOut",
+        // starts the instant the loading screen begins to lift
+        ease: "power1.out",
         paused: true,
         onUpdate: () => render(lastS),
         onComplete: startPulse,
