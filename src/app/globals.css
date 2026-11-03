@@ -277,3 +277,59 @@ body {
   #loader { flex-direction: column; gap: 0; }
   .loader-spinner { transform: scale(0.45); height: 16rem; }
 }
+
+/* ------------------------------------------------------------------
+   "HELLO" SPLASH — shown when a menu link is clicked
+   (from the original portfolio)
+   ------------------------------------------------------------------ */
+.nav-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  pointer-events: none;
+  clip-path: polygon(0 50%, 100% 50%, 100% 50%, 0 50%);
+  transition: clip-path 0.6s cubic-bezier(0.76, 0, 0.24, 1);
+}
+.nav-splash.active {
+  pointer-events: all;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+.nav-splash.closing {
+  clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
+  transition: clip-path 0.5s cubic-bezier(0.76, 0, 0.24, 1) 0.1s;
+}
+.nav-splash-inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 6rem;
+  perspective: 600px;
+}
+.splash-word {
+  position: absolute;
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-stretch: 125%;
+  font-size: clamp(2.5rem, 7vw, 5rem);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(30px) rotateX(40deg);
+  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.splash-word.active {
+  opacity: 1;
+  transform: translateY(0) rotateX(0deg);
+}
+.splash-word.exit {
+  opacity: 0;
+  transform: translateY(-30px) rotateX(-40deg);
+  transition: opacity 0.2s ease, transform 0.25s ease-in;
+}
