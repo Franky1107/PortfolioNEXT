@@ -357,15 +357,21 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
       introTween = gsap.to(intro, {
         p: 1,
         duration: THREAD.introDuration,
-        delay: intro.p === 0 ? 0.2 : 0,
+        delay: intro.p === 0 ? 0.35 : 0,
         ease: "sine.inOut",
+        paused: true,
         onUpdate: () => render(lastS),
         onComplete: startPulse,
       });
     } else startPulse();
+    // wait for the loading screen to slide away before drawing
+    const playIntro = () => introTween?.play();
+    if (document.documentElement.dataset.loaded || !document.getElementById("loader")) playIntro();
+    else window.addEventListener("loader:done", playIntro, { once: true });
     render(Math.min(window.scrollY, bEnd));
 
     return () => {
+      window.removeEventListener("loader:done", playIntro);
       introTween?.kill();
       pulseTween?.kill();
       tween.scrollTrigger?.kill();
