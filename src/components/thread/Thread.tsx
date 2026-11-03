@@ -8,7 +8,8 @@
  *   2. asks each segment (src/lib/thread/segments.ts) for its points
  *   3. draws one continuous SVG thread in two layers:
  *        • BACK layer  – behind your content (the thread goes "under" text)
- *        • FRONT layer – in front, but only inside the `over` rectangles
+ *        • FRONT layer – in front of the content, except inside the `under`
+ *          rectangles (where the thread should look tucked behind a letter)
  *   4. links drawing to scroll with GSAP ScrollTrigger (scrub: true),
  *      so it draws as you scroll down and retracts as you scroll up
  *   5. rebuilds whenever the layout changes size
@@ -31,7 +32,8 @@ type Geometry = {
   commands: string[];
   d: string;
   markers: Record<string, number>;
-  over: Box[];
+  under: Box[];
+  rings: Pt[];
   connectors: Connector[];
   node?: { at: Pt; r: number };
   branches: Branch[];
@@ -50,7 +52,7 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
   const frontRef = useRef<SVGPathElement>(null);
   const measureRef = useRef<SVGPathElement>(null);
   const tipRef = useRef<SVGGElement>(null);
-  const startRef = useRef<SVGCircleElement>(null);
+  const ringRefs = useRef<(SVGGElement | null)[]>([]);
   // intro progress (0 → 1); kept across rebuilds so it only plays once
   const introRef = useRef({ p: 0 });
   const nodeRef = useRef<SVGGElement>(null);
@@ -96,7 +98,8 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
 
     const points: Pt[] = [];
     const markers: Record<string, number> = {};
-    const over: Box[] = [];
+    const under: Box[] = [];
+    const rings: Pt[] = [];
     const connectors: Connector[] = [];
     let node: Geometry["node"];
     let branches: Branch[] = [];
@@ -107,7 +110,11 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
       const offset = points.length;
       points.push(...res.points);
       for (const [k, i] of Object.entries(res.markers ?? {})) markers[k] = offset + i;
-      over.push(...(res.over ?? []));
+      under.push(...(res.under ?? []));
+      for (const idx of res.rings ?? []) {
+        markers[`ring${rings.length}`] = offset + idx;
+        rings.push(res.points[idx]);
+      }
       connectors.push(...(res.connectors ?? []));
       if (res.node) node = res.node;
       if (res.branches) branches = res.branches;
@@ -123,7 +130,8 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
       commands,
       d: moveTo(points[0]) + commands.join(""),
       markers,
-      over,
+      under,
+      rings,
       connectors,
       node,
       branches,
@@ -199,7 +207,7 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
     let prev = 0;
     for (let i = 0; i <= n; i++) {
       const target = rootTop + ys[i] - follow;
-      if (i * step <= introLen) prev = 0;
+      if (i * step <= introLen + step) prev = 0;
       else prev = Math.max(prev + step * THREAD.minScrollPerPx, target);
       sched[i] = prev;
     }
@@ -253,8 +261,11 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
         p.style.visibility = vis;
       }
 
-      // start dot
-      if (startRef.current) startRef.current.style.opacity = len > 0.5 ? "1" : "0";
+      // ◎ ring-dots appear as the thread reaches them
+      geo.rings.forEach((_, i) => {
+        const el = ringRefs.current[i];
+        if (el) el.style.opacity = len >= Math.max(0.5, (markerLen[`ring${i}`] ?? Infinity) - 3) ? "1" : "0";
+      });
 
       // glowing tip
       const tip = tipRef.current;
@@ -372,10 +383,11 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
       {geo && svgProps && (
         <svg {...svgProps} style={{ zIndex: 20 }}>
           <defs>
-            <mask id="thread-over" maskUnits="userSpaceOnUse" x={0} y={0} width={geo.width} height={geo.height}>
-              <rect width={geo.width} height={geo.height} fill="black" />
-              {geo.over.map((b, i) => (
-                <rect key={i} x={b.left} y={b.top} width={b.width} height={b.height} fill="white" />
+            {/* white = draw the thread in front; black = hide it (it shows only behind the letters) */}
+            <mask id="thread-front" maskUnits="userSpaceOnUse" x={0} y={0} width={geo.width} height={geo.height}>
+              <rect width={geo.width} height={geo.height} fill="white" />
+              {geo.under.map((b, i) => (
+                <rect key={i} x={b.left} y={b.top} width={b.width} height={b.height} fill="black" />
               ))}
             </mask>
             <radialGradient id="thread-glow">
@@ -385,8 +397,8 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
             </radialGradient>
           </defs>
 
-          {/* the same thread, visible only where it passes IN FRONT of letters */}
-          <path ref={frontRef} d={geo.d} style={threadStyle} mask="url(#thread-over)" />
+          {/* the same thread in front of the content, except where it tucks behind a letter */}
+          <path ref={frontRef} d={geo.d} style={threadStyle} mask="url(#thread-front)" />
 
           {/* leader lines to the labels */}
           {geo.connectors.map((c, i) => (
@@ -434,14 +446,26 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
             </g>
           ))}
 
-          {/* dot where the thread starts */}
-          <circle ref={startRef} cx={geo.start.x} cy={geo.start.y} r={stroke * 2} fill="var(--accent)" style={{ opacity: 0 }} />
-
           {/* glowing dot at the leading tip */}
           <g ref={tipRef} style={{ opacity: 0 }}>
             <circle r={18} fill="url(#thread-glow)" />
             <circle r={3.6} fill="white" />
           </g>
+          {/* ◎ ring-dots (start and end of the hero thread) */}
+          {geo.rings.map((p, i) => (
+            <g
+              key={i}
+              ref={(el) => {
+                ringRefs.current[i] = el;
+              }}
+              transform={`translate(${p.x} ${p.y})`}
+              style={{ opacity: 0, transition: "opacity .2s" }}
+            >
+              <circle r={stroke * 3.2} fill="black" stroke="var(--accent)" strokeWidth={stroke * 0.75} />
+              <circle r={stroke * 1.1} fill="var(--accent)" />
+            </g>
+          ))}
+
         </svg>
       )}
     </div>

@@ -138,3 +138,61 @@ export function spiral(
   }
   return pts;
 }
+
+/**
+ * A coil (helix) wound round a stroke of a letter, like thread wrapped round a pin.
+ *   axis "y": round a vertical stroke centred at `at`, running from `from` to `to` (y values)
+ *   axis "x": round a horizontal stroke centred at `at`, running from `from` to `to` (x values)
+ * `r` is how far the loops reach either side of the stroke, `tilt` separates the
+ * front and back crossings so the back ones can be hidden behind the letter.
+ * Returns the points plus small rectangles where the thread passes BEHIND the stroke.
+ */
+export function coil(opts: {
+  axis: "x" | "y";
+  at: number;
+  from: number;
+  to: number;
+  r: number;
+  turns: number;
+  strokeHalf: number;
+  tilt?: number;
+  perTurn?: number;
+}) {
+  const { axis, at, from, to, r, turns, strokeHalf } = opts;
+  const tilt = opts.tilt ?? 5;
+  const perTurn = opts.perTurn ?? 14;
+  const n = Math.round(turns * perTurn);
+  const pitch = (to - from) / turns;
+  const pts: Pt[] = [];
+  const under: { left: number; top: number; width: number; height: number }[] = [];
+  const pad = 2.5;
+  for (let i = 0; i <= n; i++) {
+    const th = (i / perTurn) * TAU; // 0 = right side (or below, for axis x)
+    const along = from + pitch * (th / TAU) - tilt * Math.sin(th);
+    const across = at + r * Math.cos(th);
+    pts.push(axis === "y" ? { x: across, y: along } : { x: along, y: across });
+  }
+  // back crossings happen at th = 3π/2 + k·2π
+  for (let k = 0; k < Math.ceil(turns); k++) {
+    const th = 1.5 * Math.PI + k * TAU;
+    if (th / TAU > turns) break;
+    const along = from + pitch * (th / TAU) + tilt;
+    const half = Math.max(5, Math.abs(pitch) * 0.22);
+    if (axis === "y") under.push({ left: at - strokeHalf - pad, top: along - half, width: (strokeHalf + pad) * 2, height: half * 2 });
+    else under.push({ left: along - half, top: at - strokeHalf - pad, width: half * 2, height: (strokeHalf + pad) * 2 });
+  }
+  return { pts, under };
+}
+
+/** A small spring (tiny loops) running straight down from `a` for `length` px. */
+export function spring(a: Pt, length: number, loops: number, r: number, perLoop = 10): Pt[] {
+  const pts: Pt[] = [];
+  const n = loops * perLoop;
+  for (let i = 1; i <= n; i++) {
+    const th = (i / perLoop) * TAU;
+    const t = i / n;
+    pts.push({ x: a.x + r * Math.sin(th), y: a.y + t * length - r * 0.6 * (1 - Math.cos(th)) * (1 - t) });
+  }
+  pts.push({ x: a.x, y: a.y + length + 2 });
+  return pts;
+}
