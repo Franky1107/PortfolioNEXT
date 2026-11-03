@@ -27,6 +27,9 @@
 
 html {
   background: #000;
+  /* keep room for the scrollbar at all times, so the page width doesn't jump
+     when the loading screen hides/shows it (that would re-measure the thread) */
+  scrollbar-gutter: stable;
   scroll-behavior: smooth;
 }
 

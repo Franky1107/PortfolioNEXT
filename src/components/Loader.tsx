@@ -14,7 +14,6 @@ const WORD_MS = 250; // time each greeting is shown
 const START_MS = 350; // "Hello" stays a little longer at the start
 const HOLD_MS = 200; // pause after the last word
 const CLOSE_MS = 700; // closing animation (matches the CSS)
-const MAX_WAIT_MS = 2500; // longest "Hello" will wait for the page to be ready
 
 export default function Loader() {
   const [word, setWord] = useState(0);
@@ -56,21 +55,8 @@ export default function Loader() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       finish();
     } else {
-      // "Hello" stays up while the page gets ready (fonts loaded, thread measured),
-      // then the greetings cycle. Never wait more than MAX_WAIT_MS.
-      let started = false;
-      const begin = () => {
-        if (started) return;
-        started = true;
-        later(() => step(1), START_MS);
-      };
-      const ready = () => html.dataset.threadReady && (document.fonts ? document.fonts.status === "loaded" : true);
-      const check = () => (ready() ? begin() : undefined);
-      window.addEventListener("thread:ready", check);
-      document.fonts?.ready.then(check);
-      check();
-      later(begin, MAX_WAIT_MS);
-      timers.push(setTimeout(() => window.removeEventListener("thread:ready", check), MAX_WAIT_MS + 10));
+      // "Hello", then the rest of the greetings one after another
+      later(() => step(1), START_MS);
     }
 
     return () => {

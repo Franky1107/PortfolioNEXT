@@ -18,7 +18,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { THREAD } from "@/lib/thread/config";
-import { clamp, moveTo, smoothCommands } from "@/lib/thread/geometry";
+import { clamp, moveTo, samplePath, smoothCommands } from "@/lib/thread/geometry";
 import { SEGMENTS } from "@/lib/thread/segments";
 import type { Box, Branch, Connector, Pt, Segment } from "@/lib/thread/types";
 
@@ -50,7 +50,6 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
   const contentRef = useRef<HTMLDivElement>(null);
   const backRef = useRef<SVGPathElement>(null);
   const frontRef = useRef<SVGPathElement>(null);
-  const measureRef = useRef<SVGPathElement>(null);
   const tipRef = useRef<SVGGElement>(null);
   const ringRefs = useRef<(SVGGElement | null)[]>([]);
   const pulseRef = useRef<SVGPathElement>(null);
@@ -61,6 +60,7 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
   const branchDotRefs = useRef<(SVGCircleElement | null)[]>([]);
   const connectorRefs = useRef<(SVGGElement | null)[]>([]);
   const [geo, setGeo] = useState<Geometry | null>(null);
+  const lastKey = useRef("");
 
   /* ---------------------------------------------------------------- */
   /* 1. MEASURE the page and build the path                            */
@@ -123,13 +123,18 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
     if (points.length < 2) return;
 
     const commands = smoothCommands(points);
+    const d = moveTo(points[0]) + commands.join("");
+    // nothing actually moved (e.g. a resize event that changed nothing)? skip the rebuild
+    const key = `${ctx.width}|${ctx.height}|${ctx.mobile}|${d}`;
+    if (key === lastKey.current) return;
+    lastKey.current = key;
     setGeo({
       width: ctx.width,
       height: ctx.height,
       mobile: ctx.mobile,
       start: points[0],
       commands,
-      d: moveTo(points[0]) + commands.join(""),
+      d,
       markers,
       under,
       rings,
@@ -170,30 +175,20 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
   useLayoutEffect(() => {
     const back = backRef.current;
     const front = frontRef.current;
-    const measure = measureRef.current;
     const root = rootRef.current;
-    if (!geo || !back || !front || !measure || !root) return;
+    if (!geo || !back || !front || !root) return;
 
     const L = back.getTotalLength();
     const step = THREAD.sampleStep;
     const intro = introRef.current;
 
-    // Length of thread at each marker (exact: measure the path up to that point)
-    const markerLen: Record<string, number> = {};
-    for (const [id, idx] of Object.entries(geo.markers)) {
-      measure.setAttribute("d", moveTo(geo.start) + geo.commands.slice(0, idx).join(""));
-      markerLen[id] = measure.getTotalLength();
-    }
+    // Sample the path (a point every `step` px) with our own fast maths, so we
+    // can place the tip and time the drawing without slow browser lookups
+    const { xs, ys, n, atCmd } = samplePath(geo.start, geo.commands, step, L);
 
-    // Sample the path so we can find the tip position cheaply while scrolling
-    const n = Math.ceil(L / step);
-    const xs = new Float32Array(n + 1);
-    const ys = new Float32Array(n + 1);
-    for (let i = 0; i <= n; i++) {
-      const p = back.getPointAtLength(Math.min(i * step, L));
-      xs[i] = p.x;
-      ys[i] = p.y;
-    }
+    // Length of thread at each marker (labels, rings, end of the hero part)
+    const markerLen: Record<string, number> = {};
+    for (const [id, idx] of Object.entries(geo.markers)) markerLen[id] = atCmd[Math.min(idx, atCmd.length - 1)];
 
     // The intro part (the hero) is drawn on page load, not by scrolling
     const introLen = Math.min(L, markerLen[THREAD.introMarker] ?? 0);
@@ -364,10 +359,6 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
         onComplete: startPulse,
       });
     } else startPulse();
-    // let the loading screen know the thread is measured and ready
-    document.documentElement.dataset.threadReady = "1";
-    window.dispatchEvent(new Event("thread:ready"));
-
     // wait for the loading screen to close before drawing
     const playIntro = () => introTween?.play();
     if (document.documentElement.dataset.loaded || !document.getElementById("loader")) playIntro();
@@ -409,7 +400,6 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
       {geo && svgProps && (
         <svg {...svgProps} style={{ zIndex: 0 }}>
           <path ref={backRef} d={geo.d} style={threadStyle} />
-          <path ref={measureRef} d="" style={{ fill: "none", stroke: "none" }} />
         </svg>
       )}
 

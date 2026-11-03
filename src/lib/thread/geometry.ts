@@ -196,3 +196,57 @@ export function spring(a: Pt, length: number, loops: number, r: number, perLoop 
   pts.push({ x: a.x, y: a.y + length + 2 });
   return pts;
 }
+
+/**
+ * Measures the smoothed path ourselves (fast) instead of asking the browser
+ * for each point with getPointAtLength (very slow on a long, twisty path).
+ * Flattens every cubic Bézier into short straight pieces, then returns:
+ *   xs/ys  – a point every `step` px along the path
+ *   atCmd  – the length of the path after each command (for markers)
+ * Lengths are scaled to `realLength` (the browser's own getTotalLength) so the
+ * stroke-dash animation lines up exactly.
+ */
+export function samplePath(start: Pt, commands: string[], step: number, realLength: number) {
+  const px: number[] = [start.x];
+  const py: number[] = [start.y];
+  const cum: number[] = [0];
+  const atCmd = new Float64Array(commands.length + 1);
+  let x0 = start.x;
+  let y0 = start.y;
+  for (let c = 0; c < commands.length; c++) {
+    const v = commands[c].match(/-?\d*\.?\d+(?:e-?\d+)?/g)!.map(Number);
+    const [x1, y1, x2, y2, x3, y3] = v;
+    const rough = Math.hypot(x1 - x0, y1 - y0) + Math.hypot(x2 - x1, y2 - y1) + Math.hypot(x3 - x2, y3 - y2);
+    const k = Math.min(64, Math.max(2, Math.ceil(rough / 3)));
+    for (let j = 1; j <= k; j++) {
+      const t = j / k;
+      const u = 1 - t;
+      const x = u * u * u * x0 + 3 * u * u * t * x1 + 3 * u * t * t * x2 + t * t * t * x3;
+      const y = u * u * u * y0 + 3 * u * u * t * y1 + 3 * u * t * t * y2 + t * t * t * y3;
+      const last = px.length - 1;
+      cum.push(cum[last] + Math.hypot(x - px[last], y - py[last]));
+      px.push(x);
+      py.push(y);
+    }
+    atCmd[c + 1] = cum[cum.length - 1];
+    x0 = x3;
+    y0 = y3;
+  }
+  const total = cum[cum.length - 1] || 1;
+  const scale = realLength / total;
+  for (let i = 0; i < atCmd.length; i++) atCmd[i] *= scale;
+
+  const n = Math.ceil(realLength / step);
+  const xs = new Float32Array(n + 1);
+  const ys = new Float32Array(n + 1);
+  let seg = 0;
+  for (let i = 0; i <= n; i++) {
+    const target = Math.min(i * step, realLength) / scale;
+    while (seg < cum.length - 2 && cum[seg + 1] < target) seg++;
+    const span = cum[seg + 1] - cum[seg] || 1;
+    const t = Math.min(1, Math.max(0, (target - cum[seg]) / span));
+    xs[i] = px[seg] + (px[seg + 1] - px[seg]) * t;
+    ys[i] = py[seg] + (py[seg + 1] - py[seg]) * t;
+  }
+  return { xs, ys, n, atCmd };
+}
