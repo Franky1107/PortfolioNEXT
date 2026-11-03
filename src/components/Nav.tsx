@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import SoundToggle from "./SoundToggle";
+import MenuIsland from "./MenuIsland";
+import { initSound } from "@/lib/sound";
 
 // Edit the links here. "#name" scrolls to the section with id="name".
 const LINKS = [
@@ -26,6 +28,9 @@ const Arrow = ({ className = "" }: { className?: string }) => (
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+
+  // ambient sound: restore the visitor's choice + hover/click sounds
+  useEffect(() => initSound(), []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -52,23 +57,10 @@ export default function Nav() {
           SM
         </a>
 
-        {/* Desktop links — a small glass pill, centred, with the sound toggle beside it */}
+        {/* Desktop: the centre menu pill with the play button (becomes the
+            "now playing" island when music starts) */}
         <nav aria-label="Main" className="absolute left-1/2 hidden -translate-x-1/2 md:block">
-          <div className="absolute left-full top-1/2 ml-2 -translate-y-1/2">
-            <SoundToggle />
-          </div>
-          <ul className="flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.06] p-1 backdrop-blur-md">
-            {LINKS.map((l) => (
-              <li key={l.label}>
-                <a
-                  href={l.href}
-                  className="block rounded-full px-4 py-1.5 text-[14px] text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-                >
-                  {l.label}
-                </a>
-              </li>
-            ))}
-          </ul>
+          <MenuIsland links={LINKS} />
         </nav>
 
         <div className="flex items-center gap-2">
@@ -83,7 +75,7 @@ export default function Nav() {
 
           {/* Mobile: sound toggle (icon only) */}
           <div className="md:hidden">
-            <SoundToggle compact />
+            <SoundToggle />
           </div>
 
           {/* Mobile menu button */}

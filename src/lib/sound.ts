@@ -140,6 +140,12 @@ export function toggleSound() {
   else stopMusic();
 }
 
+/** Turn sound on (or resume it if it was left on but hasn't started yet). */
+export function startSound() {
+  if (!state.on) return toggleSound();
+  if (!state.playing) startMusic();
+}
+
 /** A soft UI blip. kind: "hover" (very light) or "click" */
 export function blip(kind: "hover" | "click") {
   if (!state.on || !state.playing || !ctx || !ui) return;
