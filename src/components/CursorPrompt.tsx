@@ -20,7 +20,7 @@ export default function CursorPrompt() {
   const { playing, prompt } = useSyncExternalStore(subscribe, getState, getServerState);
   const ref = useRef<HTMLDivElement>(null);
   const loaded = useSyncExternalStore(subscribeLoaded, getLoaded, getLoadedServer);
-  // only at the start of a visit: never again once music has played or been turned off
+  // only at the start of each page load: hidden once music has played or been turned off
   const active = loaded && prompt && !playing;
 
   useEffect(() => {
