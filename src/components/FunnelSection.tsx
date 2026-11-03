@@ -35,7 +35,7 @@ export default function FunnelSection() {
           <div className="grid h-full grid-cols-1 items-center gap-14 px-5 pb-20 pt-24 md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] md:gap-[3vw] md:px-[3vw] md:pb-[4vh] md:pt-[calc(72px+2vh)]">
             {/* LEFT — heading + line */}
             <div className="flex flex-col justify-between self-stretch md:py-[10vh]">
-              <h2 className="type-heavy text-[12.5vw] uppercase leading-[0.9] md:text-[5.15vw]">
+              <h2 className="type-heavy text-[11.6vw] uppercase leading-[0.9] md:text-[5.15vw]">
                 <span className="md:block">From complex </span>
                 <span className="md:block">ideas to simple </span>
                 <span className="md:block">experiences.</span>
