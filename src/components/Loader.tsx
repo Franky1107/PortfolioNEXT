@@ -23,9 +23,19 @@ export default function Loader() {
     const timers: ReturnType<typeof setTimeout>[] = [];
     document.documentElement.style.overflow = "hidden"; // no scrolling while loading
 
+    // Always start at the top: stop the browser restoring the old scroll
+    // position on refresh (it would show once the loader slides away)
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    const toTop = () => window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+    toTop();
+
     const finish = () => {
+      toTop();
       setHidden(true);
       document.documentElement.style.overflow = "";
+      // a link like /#projects still jumps to its section once loading is done
+      const target = location.hash ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null;
+      if (target) target.scrollIntoView();
       document.documentElement.dataset.loaded = "1";
       window.dispatchEvent(new Event("loader:done"));
       timers.push(setTimeout(() => setGone(true), SLIDE_MS + 50));
