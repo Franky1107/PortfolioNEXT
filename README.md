@@ -100,11 +100,11 @@ PortfolioNEXT/
 1. Elements the thread interacts with carry a `data-thread="…"` attribute, for example `data-thread="iam"`, one per letter of the name, `data-thread="photo"` and `data-thread="funnel"`.
 2. `Thread.tsx` measures them with `getBoundingClientRect()`. It does this again whenever the layout changes size.
 3. Each **segment** in `segments.ts` turns those measurements into points:
-   - **Hero** (draws itself automatically when the page loads): a dot after "I AM", one loop round "Sourav", a long straight line in the gap between the two words, a circle round the "k", then a small squiggle down. It never goes right of the photo's left edge, so it can't cross your face.
+   - **Hero** (draws itself automatically when the page loads, following the hand sketch): a ◎ start ring, into the "S", behind the left side of the "o", along the bottom of "u r", over the top and coiled round the "a", a hairpin line through the gap between the words, a loop round the "k" (behind its stem), a coil round the "c", and a spring down to a ◎ end ring. It never goes right of the photo's left edge, so it can't cross your face.
    - **Funnel:** a hanging string, then the scribble tangle, the wobbly walls and rings that the thread draws by looping, the neck, and the Insight node. After that come three branches that draw together.
 4. All points are smoothed into **one** SVG path. That path is drawn twice:
-   - a **back layer** behind the text, where the letters hide it, so it reads as "under";
-   - a **front layer** above the text, masked so it shows only on the "over" letters.
+   - a **back layer** behind the text;
+   - a **front layer** above the text, with small "under" rectangles cut out of it. In those spots only the back layer shows, so the thread looks tucked behind a letter stroke, like the blue dotted marks in the sketch.
 5. GSAP ScrollTrigger (`scrub: true`) links scroll position to `stroke-dashoffset`. The thread draws on the way down and retracts on the way up. The tip runs about 85% of the way down the screen, so each part is finished while it is still in view.
 6. Labels and leader lines fade in when the thread passes them. The node lights up with a glow pulse when the thread arrives.
 

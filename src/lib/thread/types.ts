@@ -46,8 +46,13 @@ export interface SegmentResult {
   points: Pt[];
   /** name → index into THIS segment's points (used for label timing) */
   markers?: Record<string, number>;
-  /** Rectangles where the thread is drawn IN FRONT of the content */
-  over?: Box[];
+  /**
+   * Rectangles where the thread goes BEHIND the content (e.g. behind one stroke
+   * of a letter). Everywhere else the thread is drawn in front.
+   */
+  under?: Box[];
+  /** Point indices (into this segment's points) that get a ring-dot ◎ */
+  rings?: number[];
   connectors?: Connector[];
   /** A glowing node at the end of the main thread */
   node?: { at: Pt; r: number };

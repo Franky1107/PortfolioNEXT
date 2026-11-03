@@ -13,83 +13,164 @@
  *      or move the node/branches (they always sit at the end of the thread).
  */
 import { FUNNEL } from "./config";
-import { lerp, scribble, seeded, spiral, wobblyLine } from "./geometry";
+import { coil, lerp, scribble, seeded, spiral, spring, wobblyLine } from "./geometry";
 import type { Box, Connector, Pt, Segment } from "./types";
 
 /* ------------------------------------------------------------------ */
-/* 1. HERO — a few calm gestures (drawn automatically on page load):   */
-/*    dot after "I AM" → loop round "Sourav" → one long line between   */
-/*    the two words → a circle round the "k" → a little squiggle down  */
+/* 1. HERO — drawn automatically on page load. Follows the hand sketch: */
+/*    ◎ start → into the "S" → behind the "o"'s left side → along the   */
+/*    bottom of "ur" → over the top and coiled round the "a" → a        */
+/*    hairpin line through the gap between the words → loop round the   */
+/*    "k" (behind its stem) → coil round the "c" → spring → ◎ end       */
 /* ------------------------------------------------------------------ */
+
+/** Turn a plain rectangle into a Box */
+const rect = (left: number, top: number, width: number, height: number): Box => ({
+  left,
+  top,
+  width,
+  height,
+  right: left + width,
+  bottom: top + height,
+  cx: left + width / 2,
+  cy: top + height / 2,
+});
+
 export const heroSegment: Segment = (ctx) => {
   const iam = ctx.box("iam");
   const tag = ctx.box("tagline");
   const hero = ctx.box("hero");
   const photo = ctx.box("photo");
-  const line1 = ctx.boxes("name-1"); // letters of "Sourav"
-  const line2 = ctx.boxes("name-2"); // letters of "Mallick"
-  if (!iam || !tag || !hero || line1.length < 4 || line2.length < 2) return null;
+  const line1 = ctx.boxes("name-1"); // S o u r a v
+  const line2 = ctx.boxes("name-2"); // M a l l i c k
+  if (!iam || !tag || !hero || line1.length < 6 || line2.length < 7) return null;
 
   const m = ctx.mobile;
+  const [S, o, u, r, a] = line1;
+  const c = line2[5];
+  const k = line2[6];
+  const h = S.height; // height of one line of the name
   const pts: Pt[] = [];
-  const h = line1[0].height; // height of one line of the name
-  const S = line1[0];
-  const o = line1[1];
-  const r = line1[3];
-  const last1 = line1[line1.length - 1];
-  const k = line2[line2.length - 1];
+  const under: Box[] = [];
 
-  // Never cross the portrait: on desktop it sits to the right of the text,
-  // so the thread may not go further right than the photo's left edge.
-  const maxX = !m && photo ? photo.left - 24 : ctx.width - 10;
-  const safeX = (x: number) => Math.min(Math.max(x, 8), maxX);
+  /** a point inside a letter's box: fx/fy are fractions of its width/height */
+  const P = (b: Box, fx: number, fy: number): Pt => ({ x: b.left + b.width * fx, y: b.top + b.height * fy });
 
-  // The thin gap between "Sourav" and "Mallick"
-  const gapY = line2[0].top - 0.02 * h;
+  // Never cross the portrait (desktop: it sits right of the name)
+  const maxX = !m && photo ? photo.left - 20 : ctx.width - 8;
+  const safeX = (x: number) => Math.min(Math.max(x, 10), maxX);
 
-  // 1 — start dot just after "I AM"
-  pts.push({ x: iam.right + 20, y: iam.cy });
+  // ◎ 1 — start ring, just left of the "S", under "I AM"
+  const start = { x: Math.max(14, S.left - 0.04 * h), y: S.top + 0.06 * h };
+  pts.push(start);
+  const rings = [0];
 
-  // 2 — over the top of "Sourav", down through the "o", round the left of the "S"
-  pts.push({ x: r.cx, y: S.top + 0.14 * h });
-  pts.push({ x: o.cx, y: S.top + 0.6 * h });
-  pts.push({ x: Math.max(18, S.left - 0.12 * h), y: S.top + 0.66 * h });
+  // 2 — down the left of the S, then hook into its middle and out at the top right
+  pts.push({ x: Math.max(10, S.left - 0.07 * h), y: S.top + 0.42 * h });
+  pts.push(P(S, 0.22, 0.66));
+  pts.push(P(S, 0.5, 0.52));
+  pts.push(P(S, 0.86, 0.4));
 
-  // 3 — one long, straight line along the gap between the two words
-  pts.push({ x: S.cx, y: gapY });
-  pts.push({ x: line1[2].cx, y: gapY });
-  pts.push({ x: r.right, y: gapY });
-  pts.push({ x: last1.left, y: gapY });
+  // 3 — behind the left side of the "o", through its middle, out in front at the bottom right
+  pts.push(P(o, 0.14, 0.47));
+  under.push(rect(o.left, o.top + 0.38 * h, o.width * 0.3, 0.2 * h));
+  pts.push(P(o, 0.5, 0.62));
+  pts.push(P(o, 0.9, 0.8));
 
-  // 4 — a loop round the "k", then down through it
-  pts.push({ x: safeX(k.right + 0.16 * h), y: k.top + 0.22 * h });
-  pts.push({ x: safeX(k.right + 0.1 * h), y: k.top + 0.72 * h });
-  pts.push({ x: k.cx, y: k.bottom + 0.08 * h });
-  pts.push({ x: k.left - 0.08 * h, y: k.top + 0.55 * h });
-  pts.push({ x: k.cx - 0.05 * h, y: k.top + 0.12 * h });
-  const exitX = safeX(k.cx + 0.12 * h);
-  pts.push({ x: exitX, y: k.bottom + 0.16 * h });
+  // 4 — straight along the bottom of "u" and "r"
+  const lowY = o.top + 0.8 * h;
+  pts.push({ x: u.left + u.width * 0.3, y: lowY });
+  pts.push({ x: u.right, y: lowY });
+  pts.push({ x: r.left + r.width * 0.55, y: lowY });
 
-  // in front of the "o" and the "k"; behind everything else
-  const over: Box[] = [o, k];
+  // 5 — up over the top of the "r" and "a"…
+  pts.push(P(r, 0.92, 0.42));
+  pts.push(P(r, 1.0, 0.16));
+  pts.push(P(a, 0.45, 0.1));
+  pts.push(P(a, 0.8, 0.26));
 
+  // …then coil twice round the "a"'s right-hand stem
+  const stemX = a.left + a.width * 0.82;
+  const stemHalf = a.width * 0.2;
+  const ac = coil({
+    axis: "y",
+    at: stemX,
+    from: a.top + 0.42 * h,
+    to: a.top + 0.74 * h,
+    r: stemHalf + Math.max(5, 0.08 * h),
+    turns: m ? 1 : 2,
+    strokeHalf: stemHalf,
+    tilt: Math.max(4, 0.075 * h),
+  });
+  pts.push(...ac.pts);
+  under.push(...ac.under.map((q) => rect(q.left, q.top, q.width, q.height)));
+
+  // 6 — down-left out of the "a" into the gap between the two words
+  const g0 = S.top + 0.885 * h; // bottom of "Sourav"
+  const g1 = line2[0].top + 0.07 * h; // top of "Mallick"
+  const y1 = lerp(g0, g1, 0.3);
+  const y2 = lerp(g0, g1, 0.78);
+  pts.push(P(a, 0.3, 0.92));
+  pts.push({ x: r.cx, y: y1 });
+
+  // 7 — hairpin: left along the gap, a tight U-turn, and back right
+  const hx = Math.max(12, S.left - 0.07 * h);
+  pts.push({ x: u.cx, y: y1 }, { x: o.cx, y: y1 }, { x: S.cx, y: y1 });
+  pts.push({ x: hx + 6, y: y1 }, { x: hx, y: (y1 + y2) / 2 }, { x: hx + 6, y: y2 });
+  pts.push({ x: S.cx, y: y2 }, { x: line2[1].cx, y: y2 }, { x: line2[3].cx, y: y2 }, { x: c.left, y: y2 });
+
+  // 8 — loop round the "k": over its arm, round the right, back left
+  //     (behind its stem), curl down
+  pts.push(P(k, 0.42, 0.2));
+  pts.push({ x: safeX(k.right + 0.07 * h), y: k.top + 0.3 * h });
+  pts.push({ x: safeX(k.right - 0.02 * k.width), y: k.top + 0.47 * h });
+  pts.push(P(k, 0.55, 0.47));
+  pts.push(P(k, 0.15, 0.46));
+  under.push(rect(k.left - 2, k.top + 0.4 * h, k.width * 0.34, 0.13 * h));
+  pts.push({ x: k.left - 0.07 * h, y: k.top + 0.5 * h });
+
+  // 9 — down to the "c" and coil round the end of its lower stroke
+  const cx0 = c.left + c.width * 0.84;
+  const cHalf = c.width * 0.1;
+  pts.push(P(c, 0.98, 0.56));
+  const cc = coil({
+    axis: "y",
+    at: cx0,
+    from: c.top + 0.62 * h,
+    to: c.top + 0.86 * h,
+    r: cHalf + Math.max(5, 0.07 * h),
+    turns: m ? 1 : 1.5,
+    strokeHalf: cHalf,
+    tilt: Math.max(4, 0.06 * h),
+  });
+  pts.push(...cc.pts);
+  under.push(...cc.under.map((q) => rect(q.left, q.top, q.width, q.height)));
+
+  // 10 — a little spring dropping to the ◎ end ring (just above the tagline)
+  const last = pts[pts.length - 1];
+  const springTop = { x: last.x, y: Math.max(last.y, c.bottom) + 4 };
+  const endY = tag.top - Math.max(14, 0.12 * h);
+  pts.push(springTop);
+  pts.push(...spring(springTop, Math.max(16, endY - springTop.y), m ? 3 : 4, m ? 4 : 6));
+  rings.push(pts.length - 1);
+  const heroEnd = pts.length - 1;
+  const end = pts[heroEnd];
+
+  // ---- after the end ring the thread carries on (on scroll) to the next section
   if (!m) {
-    // Desktop: a small squiggle dropping below the name, then a sweep right
+    // right, above the tagline, then down past its end and sweep toward the funnel
     const floor = Math.max(tag.bottom, photo?.bottom ?? 0);
     const sweepY = floor + Math.max(24, (hero.bottom - floor) * 0.45);
-    const drop = sweepY - (k.bottom + 0.16 * h);
-    pts.push({ x: exitX - 14, y: k.bottom + 0.16 * h + drop * 0.25 });
-    pts.push({ x: exitX + 10, y: k.bottom + 0.16 * h + drop * 0.5 });
-    pts.push({ x: exitX - 6, y: k.bottom + 0.16 * h + drop * 0.75 });
-    pts.push({ x: exitX + 30, y: sweepY });
+    const gx = Math.max(tag.right + 30, end.x + 60);
+    pts.push({ x: end.x + 24, y: end.y + 2 });
+    pts.push({ x: gx, y: end.y + 8 });
+    pts.push({ x: gx + 14, y: sweepY - 10 });
     pts.push({ x: ctx.width * 0.68, y: sweepY + 10 });
   } else {
-    // Mobile: back left under the name, down the left gutter beside the
-    // photo (never across it), then right underneath the photo
+    // left, above the tagline, down the left gutter beside the photo, then right under it
     const gx = 9;
-    pts.push({ x: k.left, y: k.bottom + 0.3 * h });
-    pts.push({ x: line2[1].cx, y: k.bottom + 0.34 * h });
-    pts.push({ x: gx + 6, y: tag.top - 6 });
+    pts.push({ x: end.x - 24, y: end.y + 2 });
+    pts.push({ x: gx + 10, y: end.y + 8 });
     pts.push({ x: gx, y: tag.bottom });
     if (photo) pts.push({ x: gx, y: photo.cy });
     const sweepY = (photo?.bottom ?? tag.bottom) + 30;
@@ -98,8 +179,7 @@ export const heroSegment: Segment = (ctx) => {
     pts.push({ x: ctx.width - 9, y: sweepY + 46 });
   }
 
-  // everything up to here is drawn automatically when the page loads
-  return { points: pts, over, markers: { heroEnd: pts.length - 1 } };
+  return { points: pts, under, rings, markers: { heroEnd } };
 };
 
 /* ------------------------------------------------------------------ */

@@ -28,7 +28,7 @@ export default function Hero() {
             <Letters word="Mallick" anchor="name-2" />
           </h1>
 
-          <p data-thread="tagline" className="mt-10 max-w-[44ch] self-start text-[15px] leading-relaxed md:mt-[3.6vw] md:max-w-none md:text-[1.4vw] md:leading-[1.4]">
+          <p data-thread="tagline" className="mt-20 max-w-[44ch] self-start text-[15px] leading-relaxed md:mt-[6vw] md:max-w-none md:text-[1.4vw] md:leading-[1.4]">
             Software Engineer working across data engineering,
             <br className="hidden md:block" /> AI and intelligent systems, transforming complex data into meaningful solutions.
           </p>
