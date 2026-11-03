@@ -41,7 +41,11 @@ export default function Loader() {
       if (target) target.scrollIntoView();
       html.dataset.loaded = "1";
       window.dispatchEvent(new Event("loader:done"));
-      later(() => setGone(true), CLOSE_MS + 50);
+      later(() => {
+        setGone(true);
+        html.dataset.loaderGone = "1";
+        window.dispatchEvent(new Event("loader:gone"));
+      }, CLOSE_MS + 50);
     };
 
     // one word after another (each step waits for the previous one, so a busy
