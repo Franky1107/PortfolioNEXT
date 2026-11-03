@@ -24,11 +24,13 @@ export default function FunnelSection() {
        Phones: normal height, the thread draws as you scroll past. */
     <section id="approach" className="relative bg-beige text-ink md:h-[180svh]">
       <div className="md:sticky md:top-0 md:h-[100svh]">
+        {/* starts at "top 85%" — the same moment the hero thread reaches this
+            section's edge (THREAD.followAt), so the two read as one line */}
         <Thread
           route="funnel"
           className="h-full"
           contentClassName="h-full"
-          scroll={{ trigger: "#approach", start: "top 70%", end: "bottom 115%", startMobile: "top 80%", endMobile: "bottom 85%" }}
+          scroll={{ trigger: "#approach", start: "top 85%", end: "bottom 115%", startMobile: "top 85%", endMobile: "bottom 85%" }}
         >
           <div className="grid h-full grid-cols-1 items-center gap-14 px-5 pb-20 pt-24 md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] md:gap-[3vw] md:px-[3vw] md:pb-[4vh] md:pt-[calc(72px+2vh)]">
             {/* LEFT — heading + line */}
