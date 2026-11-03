@@ -12,15 +12,16 @@ const getLoaded = () => !!document.documentElement.dataset.loaderGone;
 const getLoadedServer = () => false;
 
 /**
- * After the loading screen, and until music is playing, the cursor becomes a small square with
+ * After the loading screen — until the visitor first plays (or turns off) the music — the cursor becomes a small square with
  * "CLICK TO ENABLE SOUND", and clicking anywhere (outside links and buttons)
  * turns the music on. Mouse / trackpad only — never on touch screens.
  */
 export default function CursorPrompt() {
-  const { playing } = useSyncExternalStore(subscribe, getState, getServerState);
+  const { playing, prompt } = useSyncExternalStore(subscribe, getState, getServerState);
   const ref = useRef<HTMLDivElement>(null);
   const loaded = useSyncExternalStore(subscribeLoaded, getLoaded, getLoadedServer);
-  const active = loaded && !playing;
+  // only at the start of a visit: never again once music has played or been turned off
+  const active = loaded && prompt && !playing;
 
   useEffect(() => {
     const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
