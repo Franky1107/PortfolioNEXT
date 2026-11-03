@@ -53,6 +53,7 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
   const measureRef = useRef<SVGPathElement>(null);
   const tipRef = useRef<SVGGElement>(null);
   const ringRefs = useRef<(SVGGElement | null)[]>([]);
+  const pulseRef = useRef<SVGPathElement>(null);
   // intro progress (0 → 1); kept across rebuilds so it only plays once
   const introRef = useRef({ p: 0 });
   const nodeRef = useRef<SVGGElement>(null);
@@ -253,7 +254,7 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
       lastS = s;
       const scrolled = lengthAt(s);
       // during the intro, the hero part grows on its own; scrolling past it takes over
-      const len = full ? L : scrolled > introLen + 1 ? scrolled : Math.min(scrolled, introLen * intro.p);
+      const len = full ? L : scrolled > introLen + step + 1 ? scrolled : Math.min(scrolled, introLen * intro.p);
       const off = String(L - len);
       const vis = len > 0.5 ? "visible" : "hidden";
       for (const p of [back, front]) {
@@ -264,13 +265,17 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
       // ◎ ring-dots appear as the thread reaches them
       geo.rings.forEach((_, i) => {
         const el = ringRefs.current[i];
-        if (el) el.style.opacity = len >= Math.max(0.5, (markerLen[`ring${i}`] ?? Infinity) - 3) ? "1" : "0";
+        if (el) el.classList.toggle("is-on", len >= Math.max(0.5, (markerLen[`ring${i}`] ?? Infinity) - 3));
       });
+
+      // the travelling light only runs once the hero thread is fully drawn
+      if (pulseRef.current) pulseRef.current.style.visibility = len >= introLen - 2 ? "visible" : "hidden";
 
       // glowing tip
       const tip = tipRef.current;
       if (tip) {
-        if (len > 0.5 && len < L - 0.5) {
+        const restingOnRing = geo.rings.some((_, i) => Math.abs(len - (markerLen[`ring${i}`] ?? -99)) < 4);
+        if (len > 0.5 && len < L - 0.5 && !restingOnRing) {
           const fi = len / step;
           const i = Math.min(n - 1, Math.floor(fi));
           const t = fi - i;
@@ -313,6 +318,7 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       intro.p = 1;
       render(0, true);
+      if (pulseRef.current) pulseRef.current.style.display = "none";
       return;
     }
 
@@ -324,21 +330,44 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
       scrollTrigger: { start: 0, end: bEnd, scrub: true },
     });
 
+    // After the intro, a short bright "spark" keeps travelling along the hero
+    // thread — through and behind the letters — so it never sits static.
+    let pulseTween: gsap.core.Tween | undefined;
+    const pulse = pulseRef.current;
+    const P = THREAD.pulseLength;
+    function startPulse() {
+      if (!pulse || introLen < P * 2) return;
+      pulse.style.strokeDasharray = `${P} ${L + P}`;
+      pulseTween = gsap.fromTo(
+        pulse,
+        { strokeDashoffset: P },
+        {
+          strokeDashoffset: -(introLen - P),
+          duration: introLen / THREAD.pulseSpeed,
+          ease: "sine.inOut",
+          repeat: -1,
+          repeatDelay: THREAD.pulsePause,
+        },
+      );
+    }
+
     // Intro: draw the hero part once, shortly after the page loads
     let introTween: gsap.core.Tween | undefined;
     if (intro.p < 1) {
       introTween = gsap.to(intro, {
         p: 1,
         duration: THREAD.introDuration,
-        delay: intro.p === 0 ? 0.15 : 0,
-        ease: "power2.inOut",
+        delay: intro.p === 0 ? 0.2 : 0,
+        ease: "sine.inOut",
         onUpdate: () => render(lastS),
+        onComplete: startPulse,
       });
-    }
+    } else startPulse();
     render(Math.min(window.scrollY, bEnd));
 
     return () => {
       introTween?.kill();
+      pulseTween?.kill();
       tween.scrollTrigger?.kill();
       tween.kill();
     };
@@ -400,6 +429,22 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
           {/* the same thread in front of the content, except where it tucks behind a letter */}
           <path ref={frontRef} d={geo.d} style={threadStyle} mask="url(#thread-front)" />
 
+          {/* the travelling spark (same path, short bright dash) */}
+          <path
+            ref={pulseRef}
+            d={geo.d}
+            mask="url(#thread-front)"
+            style={{
+              fill: "none",
+              stroke: "#fff",
+              strokeOpacity: 0.9,
+              strokeWidth: stroke + 0.8,
+              strokeLinecap: "round",
+              strokeDasharray: `0 ${geo.width + geo.height}`,
+              visibility: "hidden",
+            }}
+          />
+
           {/* leader lines to the labels */}
           {geo.connectors.map((c, i) => (
             <g
@@ -459,10 +504,12 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
                 ringRefs.current[i] = el;
               }}
               transform={`translate(${p.x} ${p.y})`}
-              style={{ opacity: 0, transition: "opacity .2s" }}
             >
-              <circle r={stroke * 3.2} fill="black" stroke="var(--accent)" strokeWidth={stroke * 0.75} />
-              <circle r={stroke * 1.1} fill="var(--accent)" />
+              <g className="thread-ring">
+                <circle className="halo" r={stroke * 9} fill="url(#thread-glow)" />
+                <circle r={Math.max(10, stroke * 4.6)} fill="black" stroke="var(--accent)" strokeWidth={stroke} />
+                <circle r={Math.max(3.5, stroke * 1.5)} fill="var(--accent)" />
+              </g>
             </g>
           ))}
 
