@@ -50,6 +50,9 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
   const frontRef = useRef<SVGPathElement>(null);
   const measureRef = useRef<SVGPathElement>(null);
   const tipRef = useRef<SVGGElement>(null);
+  const startRef = useRef<SVGCircleElement>(null);
+  // intro progress (0 → 1); kept across rebuilds so it only plays once
+  const introRef = useRef({ p: 0 });
   const nodeRef = useRef<SVGGElement>(null);
   const branchRefs = useRef<(SVGPathElement | null)[]>([]);
   const branchDotRefs = useRef<(SVGCircleElement | null)[]>([]);
@@ -138,8 +141,9 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
         raf = requestAnimationFrame(build);
       }, 120);
     };
-    if (document.fonts) document.fonts.ready.then(build);
-    else build();
+    // build straight away, then again once the web fonts have loaded
+    build();
+    document.fonts?.ready.then(schedule);
     const ro = new ResizeObserver(schedule);
     if (contentRef.current) ro.observe(contentRef.current);
     window.addEventListener("resize", schedule);
@@ -163,6 +167,7 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
 
     const L = back.getTotalLength();
     const step = THREAD.sampleStep;
+    const intro = introRef.current;
 
     // Length of thread at each marker (exact: measure the path up to that point)
     const markerLen: Record<string, number> = {};
@@ -181,16 +186,21 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
       ys[i] = p.y;
     }
 
+    // The intro part (the hero) is drawn on page load, not by scrolling
+    const introLen = Math.min(L, markerLen[THREAD.introMarker] ?? 0);
+
     // Scroll schedule: sample i is fully drawn when the page has scrolled sched[i] px.
-    // The tip follows THREAD.followAt of the viewport, but dense parts (weave,
-    // tangle) are given at least THREAD.minScrollPerPx scroll per px of thread.
+    // The tip runs THREAD.followAt of the way down the screen, so each part is
+    // finished while it is still visible. Dense parts (the tangle) get at least
+    // THREAD.minScrollPerPx scroll per px of thread so they don't flash past.
     const rootTop = root.getBoundingClientRect().top + window.scrollY;
     const follow = window.innerHeight * THREAD.followAt;
     const sched = new Float32Array(n + 1);
     let prev = 0;
     for (let i = 0; i <= n; i++) {
       const target = rootTop + ys[i] - follow;
-      prev = i === 0 ? Math.max(0, target) : Math.max(prev + step * THREAD.minScrollPerPx, target);
+      if (i * step <= introLen) prev = 0;
+      else prev = Math.max(prev + step * THREAD.minScrollPerPx, target);
       sched[i] = prev;
     }
     let bStart = prev;
@@ -207,7 +217,7 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
     }
 
     const lengthAt = (s: number) => {
-      if (s <= sched[0]) return 0;
+      if (s < sched[0]) return 0;
       if (s >= sched[n]) return L;
       let lo = 0;
       let hi = n;
@@ -230,14 +240,21 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
     for (const p of [back, front]) p.style.strokeDasharray = `${L} ${L + 20}`;
     branchEls.forEach((el, i) => el && (el.style.strokeDasharray = `${branchLens[i]} ${branchLens[i] + 20}`));
 
+    let lastS = 0;
     const render = (s: number, full = false) => {
-      const len = full ? L : lengthAt(s);
+      lastS = s;
+      const scrolled = lengthAt(s);
+      // during the intro, the hero part grows on its own; scrolling past it takes over
+      const len = full ? L : scrolled > introLen + 1 ? scrolled : Math.min(scrolled, introLen * intro.p);
       const off = String(L - len);
       const vis = len > 0.5 ? "visible" : "hidden";
       for (const p of [back, front]) {
         p.style.strokeDashoffset = off;
         p.style.visibility = vis;
       }
+
+      // start dot
+      if (startRef.current) startRef.current.style.opacity = len > 0.5 ? "1" : "0";
 
       // glowing tip
       const tip = tipRef.current;
@@ -254,13 +271,15 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
       }
 
       // labels + leader lines fade in once the thread reaches them
+      // (a marker at the very end of the thread starts fading in just before it)
+      const fadeAt = (id: string) => Math.min(markerLen[id] ?? Infinity, L - THREAD.labelFade);
       geo.connectors.forEach((c, i) => {
-        const o = clamp((len - (markerLen[c.id] ?? Infinity)) / THREAD.labelFade);
+        const o = clamp((len - fadeAt(c.id)) / THREAD.labelFade);
         const line = connectorRefs.current[i];
         if (line) line.style.opacity = String(o);
       });
       labels.forEach((el, id) => {
-        const o = clamp((len - (markerLen[id] ?? Infinity)) / THREAD.labelFade);
+        const o = clamp((len - fadeAt(id)) / THREAD.labelFade);
         el.style.opacity = String(o);
       });
 
@@ -281,6 +300,7 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
 
     // Respect reduced-motion: show everything, fully drawn, no animation
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      intro.p = 1;
       render(0, true);
       return;
     }
@@ -292,9 +312,22 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
       onUpdate: () => render(proxy.s),
       scrollTrigger: { start: 0, end: bEnd, scrub: true },
     });
+
+    // Intro: draw the hero part once, shortly after the page loads
+    let introTween: gsap.core.Tween | undefined;
+    if (intro.p < 1) {
+      introTween = gsap.to(intro, {
+        p: 1,
+        duration: THREAD.introDuration,
+        delay: intro.p === 0 ? 0.15 : 0,
+        ease: "power2.inOut",
+        onUpdate: () => render(lastS),
+      });
+    }
     render(Math.min(window.scrollY, bEnd));
 
     return () => {
+      introTween?.kill();
       tween.scrollTrigger?.kill();
       tween.kill();
     };
@@ -401,10 +434,13 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
             </g>
           ))}
 
+          {/* dot where the thread starts */}
+          <circle ref={startRef} cx={geo.start.x} cy={geo.start.y} r={stroke * 2} fill="var(--accent)" style={{ opacity: 0 }} />
+
           {/* glowing dot at the leading tip */}
           <g ref={tipRef} style={{ opacity: 0 }}>
-            <circle r={14} fill="url(#thread-glow)" />
-            <circle r={3} fill="white" />
+            <circle r={18} fill="url(#thread-glow)" />
+            <circle r={3.6} fill="white" />
           </g>
         </svg>
       )}
