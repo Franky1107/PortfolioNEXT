@@ -136,7 +136,8 @@ body {
 }
 
 /* ------------------------------------------------------------------
-   LOADING SCREEN (from the original portfolio)
+   LOADING SCREEN — greetings in several languages (from the original
+   portfolio). Shown on page load, then wipes up out of the way.
    ------------------------------------------------------------------ */
 #loader {
   position: fixed;
@@ -145,164 +146,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 3rem;
-  color: #fff;
-  background: linear-gradient(to right, #434343, #000000);
-  transition: transform 0.8s cubic-bezier(0.7, 0, 0.3, 1);
-}
-#loader.is-hidden {
-  transform: translateY(-100%);
-  pointer-events: none;
-}
-
-.loader-content {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  width: 100%;
-  max-width: 600px;
-  padding: 0 2rem;
-  font-family: var(--font-sans);
-  font-size: clamp(0.9rem, 2vw, 1.1rem);
-  font-weight: 500;
-}
-.loader-name {
-  flex: 0 0 auto;
-  white-space: nowrap;
-  text-align: right;
-  line-height: 1.2;
-}
-.loader-line-wrap {
-  position: relative;
-  flex: 1;
-  height: 1px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.2);
-}
-.loader-line {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 0%;
-  background: #fff;
-  transition: width 0.05s linear;
-}
-.loader-pct {
-  flex: 0 0 3rem;
-  text-align: left;
-  font-variant-numeric: tabular-nums;
-}
-
-/* Spinner — from Uiverse.io by Praashoo7 */
-.loader-spinner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform: scale(0.6);
-}
-.loaders,
-.loadersB {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.loader-bar,
-.loaderA {
-  position: absolute;
-  width: 1.15em;
-  height: 13em;
-  border-radius: 50px;
-}
-.loader-bar {
-  background: #e0e0e0;
-}
-.loader-bar::after,
-.loader-bar::before {
-  content: "";
-  position: absolute;
-  width: 1.15em;
-  background: #e0e0e0;
-  border-radius: 50px;
-  border: 1px solid #e2e2e2;
-  box-shadow:
-    inset 5px 5px 15px #d3d2d2ab,
-    inset -5px -5px 15px #e9e9e9ab;
-}
-.loader-bar::after {
-  left: 0;
-  top: 0;
-  height: 5em;
-  mask-image: linear-gradient(to bottom, black calc(100% - 48px), transparent 100%);
-}
-.loader-bar::before {
-  right: 0;
-  bottom: 0;
-  height: 4.5em;
-  mask-image: linear-gradient(to top, black calc(100% - 48px), transparent 100%);
-}
-.loaderA {
-  background: transparent;
-}
-.loader-bar:nth-child(2), .loaderA:nth-child(2) { transform: rotate(20deg); }
-.loader-bar:nth-child(3), .loaderA:nth-child(3) { transform: rotate(40deg); }
-.loader-bar:nth-child(4), .loaderA:nth-child(4) { transform: rotate(60deg); }
-.loader-bar:nth-child(5), .loaderA:nth-child(5) { transform: rotate(80deg); }
-.loader-bar:nth-child(6), .loaderA:nth-child(6) { transform: rotate(100deg); }
-.loader-bar:nth-child(7), .loaderA:nth-child(7) { transform: rotate(120deg); }
-.loader-bar:nth-child(8), .loaderA:nth-child(8) { transform: rotate(140deg); }
-.loader-bar:nth-child(9), .loaderA:nth-child(9) { transform: rotate(160deg); }
-.loader-ball {
-  width: 1.15em;
-  height: 1.15em;
-  border-radius: 50%;
-  background-color: rgb(232, 232, 232);
-  box-shadow:
-    rgba(0, 0, 0, 0.17) 0px -10px 10px 0px inset,
-    rgba(0, 0, 0, 0.15) 0px -15px 15px 0px inset,
-    rgba(0, 0, 0, 0.1) 0px -40px 20px 0px inset,
-    rgba(0, 0, 0, 0.06) 0px 2px 1px,
-    rgba(0, 0, 0, 0.09) 0px 4px 2px,
-    rgba(0, 0, 0, 0.09) 0px 8px 4px,
-    rgba(0, 0, 0, 0.09) 0px 16px 8px,
-    rgba(0, 0, 0, 0.09) 0px 32px 16px,
-    0px -1px 15px -8px rgba(0, 0, 0, 0.09);
-  animation: loader-move 3.63s ease-in-out infinite;
-}
-@keyframes loader-move {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(12em); }
-}
-
-/* phones: stack the name/progress above the spinner */
-@media (max-width: 767px) {
-  #loader { flex-direction: column; gap: 0; }
-  .loader-spinner { transform: scale(0.45); height: 16rem; }
-}
-
-/* ------------------------------------------------------------------
-   "HELLO" SPLASH — shown when a menu link is clicked
-   (from the original portfolio)
-   ------------------------------------------------------------------ */
-.nav-splash {
-  position: fixed;
-  inset: 0;
-  z-index: 9998;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: #000;
-  pointer-events: none;
-  clip-path: polygon(0 50%, 100% 50%, 100% 50%, 0 50%);
-  transition: clip-path 0.6s cubic-bezier(0.76, 0, 0.24, 1);
-}
-.nav-splash.active {
-  pointer-events: all;
   clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  transition: clip-path 0.7s cubic-bezier(0.76, 0, 0.24, 1);
 }
-.nav-splash.closing {
+#loader.is-closing {
   clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
-  transition: clip-path 0.5s cubic-bezier(0.76, 0, 0.24, 1) 0.1s;
+  pointer-events: none;
 }
-.nav-splash-inner {
+.loader-words {
   position: relative;
   display: flex;
   align-items: center;
@@ -311,7 +163,7 @@ body {
   height: 6rem;
   perspective: 600px;
 }
-.splash-word {
+.loader-word {
   position: absolute;
   color: #fff;
   font-family: var(--font-display);
@@ -324,11 +176,11 @@ body {
   transform: translateY(30px) rotateX(40deg);
   transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.splash-word.active {
+.loader-word.active {
   opacity: 1;
   transform: translateY(0) rotateX(0deg);
 }
-.splash-word.exit {
+.loader-word.exit {
   opacity: 0;
   transform: translateY(-30px) rotateX(-40deg);
   transition: opacity 0.2s ease, transform 0.25s ease-in;
