@@ -26,8 +26,14 @@ export const SOUND = {
 
 const STORAGE_KEY = "sm-sound";
 
-type State = { on: boolean; playing: boolean };
-let state: State = { on: false, playing: false };
+/**
+ * prompt: whether the "click to enable sound" cursor may show. It's only for
+ * the first moments of a visit — it goes away for good once music has played
+ * or the visitor has turned sound off (and stays away on later visits if
+ * they left it off).
+ */
+type State = { on: boolean; playing: boolean; prompt: boolean };
+let state: State = { on: false, playing: false, prompt: true };
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 const set = (patch: Partial<State>) => {
@@ -40,7 +46,7 @@ export const subscribe = (l: () => void) => {
   return () => listeners.delete(l);
 };
 export const getState = () => state;
-const SERVER_STATE: State = { on: false, playing: false };
+const SERVER_STATE: State = { on: false, playing: false, prompt: false };
 export const getServerState = () => SERVER_STATE;
 
 /* ---------------------------------------------------------------- */
@@ -106,7 +112,7 @@ async function startMusic() {
       source.start(0, source.loopStart);
     }
     rampTo(SOUND.volume, SOUND.fadeIn);
-    set({ playing: true });
+    set({ playing: true, prompt: false });
   } catch {
     set({ playing: false });
   }
@@ -132,7 +138,7 @@ function stopMusic(keepContext = false) {
 /* ---------------------------------------------------------------- */
 export function toggleSound() {
   const on = !state.on;
-  set({ on });
+  set({ on, prompt: false });
   try {
     localStorage.setItem(STORAGE_KEY, on ? "on" : "off");
   } catch {}
@@ -185,6 +191,8 @@ export function initSound() {
     t.addEventListener(type, fn, opts);
     cleanups.push(() => t.removeEventListener(type, fn, opts));
   };
+
+  if (saved === "off") set({ prompt: false }); // they turned it off before — don't nag
 
   if (saved === "on") {
     set({ on: true });
