@@ -188,3 +188,35 @@ body {
   transform: translateY(-30px) rotateX(-40deg);
   transition: opacity 0.2s ease, transform 0.25s ease-in;
 }
+
+/* ------------------------------------------------------------------
+   SOUND TOGGLE — little equaliser bars (move only while music plays)
+   ------------------------------------------------------------------ */
+.sound-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+.sound-bars i {
+  display: block;
+  width: 2px;
+  height: 3px;
+  border-radius: 1px;
+  background: currentColor;
+  transition: height 0.3s ease;
+}
+.sound-bars.is-playing i {
+  background: var(--accent);
+  animation: sound-bar 1s ease-in-out infinite;
+}
+.sound-bars.is-playing i:nth-child(2) { animation-delay: -0.4s; }
+.sound-bars.is-playing i:nth-child(3) { animation-delay: -0.7s; }
+.sound-bars.is-playing i:nth-child(4) { animation-delay: -0.2s; }
+@keyframes sound-bar {
+  0%, 100% { height: 3px; }
+  50% { height: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sound-bars.is-playing i { animation: none; height: 9px; }
+}
