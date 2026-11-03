@@ -14,12 +14,13 @@ export default function Home() {
       {/* Fixed header — outside <Thread> so it always sits above the thread */}
       <Nav />
 
-      {/* Everything inside <Thread> can be reached by the thread */}
-      <Thread>
+      {/* The hero thread; the funnel section has its own thread that picks up
+          exactly where this one ends (see FunnelSection) */}
+      <Thread route="hero">
         <Hero />
-        <FunnelSection />
-        <NextSections />
       </Thread>
+      <FunnelSection />
+      <NextSections />
     </main>
   );
 }

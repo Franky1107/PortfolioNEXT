@@ -165,7 +165,10 @@ export const heroSegment: Segment = (ctx) => {
     pts.push({ x: end.x + 24, y: end.y + 2 });
     pts.push({ x: gx, y: end.y + 8 });
     pts.push({ x: gx + 14, y: sweepY - 10 });
-    pts.push({ x: ctx.width * 0.68, y: sweepY + 10 });
+    // …and down to the bottom of the hero, exactly where the funnel thread picks up
+    const seam = funnelEntryX(ctx);
+    pts.push({ x: lerp(gx, seam, 0.6), y: sweepY + 10 });
+    pts.push({ x: seam, y: hero.bottom });
   } else {
     // left, above the tagline, down the left gutter beside the photo, then right under it
     const gx = 9;
@@ -177,6 +180,7 @@ export const heroSegment: Segment = (ctx) => {
     pts.push({ x: gx + 22, y: sweepY });
     pts.push({ x: ctx.width * 0.5, y: sweepY + 16 });
     pts.push({ x: ctx.width - 9, y: sweepY + 46 });
+    pts.push({ x: ctx.width - 9, y: hero.bottom });
   }
 
   return { points: pts, under, rings, markers: { heroEnd } };
@@ -210,7 +214,9 @@ export const funnelSegment: Segment = (ctx) => {
   const pts: Pt[] = [];
   const markers: Record<string, number> = {};
 
-  // a. entry — on mobile come down the right-hand gutter first
+  // a. entry — picks up exactly where the hero thread left off (top edge of this section)
+  pts.push({ x: funnelEntryX(ctx), y: 0 });
+  // on mobile, come down the right-hand gutter first
   if (ctx.mobile) pts.push({ x: ctx.width - 9, y: F.top - 0.1 * H });
   // a loose hanging string dropping into the tangle
   const top = tc.y - ry;
@@ -291,5 +297,25 @@ export const funnelSegment: Segment = (ctx) => {
   };
 };
 
-/** The route, in page order. Add new section segments here. */
-export const SEGMENTS: Segment[] = [heroSegment, funnelSegment];
+/**
+ * Where the hero thread hands over to the funnel thread (x position, at the
+ * boundary between the two sections). Both segments use this so they meet.
+ */
+function funnelEntryX(ctx: Parameters<Segment>[0]) {
+  if (ctx.mobile) return ctx.width - 9;
+  const F = ctx.box("funnel");
+  return F ? F.left + (FUNNEL.cx + 0.06) * F.width : ctx.width * 0.75;
+}
+
+/**
+ * The routes. Each <Thread route="…"> draws one of these. The hero and the
+ * funnel are separate threads that meet at the section boundary, because the
+ * funnel section stays pinned on screen while you scroll through it.
+ * Add new section segments here.
+ */
+export const ROUTES = {
+  hero: [heroSegment],
+  funnel: [funnelSegment],
+} satisfies Record<string, Segment[]>;
+
+export type RouteName = keyof typeof ROUTES;
