@@ -28,9 +28,8 @@ const STORAGE_KEY = "sm-sound";
 
 /**
  * prompt: whether the "click to enable sound" cursor may show. It's only for
- * the first moments of a visit — it goes away for good once music has played
- * or the visitor has turned sound off (and stays away on later visits if
- * they left it off).
+ * the start of each page load — it goes away once music has played or the
+ * visitor has turned sound off, and comes back fresh on the next refresh/visit.
  */
 type State = { on: boolean; playing: boolean; prompt: boolean };
 let state: State = { on: false, playing: false, prompt: true };
@@ -191,8 +190,6 @@ export function initSound() {
     t.addEventListener(type, fn, opts);
     cleanups.push(() => t.removeEventListener(type, fn, opts));
   };
-
-  if (saved === "off") set({ prompt: false }); // they turned it off before — don't nag
 
   if (saved === "on") {
     set({ on: true });
