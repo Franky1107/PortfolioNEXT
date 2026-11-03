@@ -1,0 +1,66 @@
+"use client";
+
+import { useEffect, useRef, useSyncExternalStore } from "react";
+import { getServerState, getState, startSound, subscribe } from "@/lib/sound";
+
+/**
+ * Until music is playing, the cursor becomes a small square with
+ * "CLICK TO ENABLE SOUND", and clicking anywhere (outside links and buttons)
+ * turns the music on. Mouse / trackpad only — never on touch screens.
+ */
+export default function CursorPrompt() {
+  const { playing } = useSyncExternalStore(subscribe, getState, getServerState);
+  const ref = useRef<HTMLDivElement>(null);
+  const active = !playing;
+
+  useEffect(() => {
+    const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    const el = ref.current;
+    if (!fine || !el || !active) return;
+
+    const html = document.documentElement;
+    html.classList.add("cursor-prompt");
+    let x = -100;
+    let y = -100;
+    let raf = 0;
+    const draw = () => {
+      raf = 0;
+      el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    };
+    const isInteractive = (t: EventTarget | null) => !!(t as Element | null)?.closest?.("a, button, [data-sound]");
+
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse") return;
+      x = e.clientX;
+      y = e.clientY;
+      el.dataset.visible = isInteractive(e.target) ? "0" : "1";
+      if (!raf) raf = requestAnimationFrame(draw);
+    };
+    const onLeave = () => (el.dataset.visible = "0");
+    const onClick = (e: MouseEvent) => {
+      if (isInteractive(e.target) || getState().playing) return;
+      startSound();
+    };
+
+    window.addEventListener("pointermove", onMove, { passive: true });
+    document.addEventListener("pointerleave", onLeave);
+    window.addEventListener("blur", onLeave);
+    document.addEventListener("click", onClick);
+    return () => {
+      html.classList.remove("cursor-prompt");
+      el.dataset.visible = "0";
+      cancelAnimationFrame(raf);
+      window.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerleave", onLeave);
+      window.removeEventListener("blur", onLeave);
+      document.removeEventListener("click", onClick);
+    };
+  }, [active]);
+
+  return (
+    <div ref={ref} className="cursor-prompt-tag" data-visible="0" aria-hidden>
+      <span className="cursor-prompt-square" />
+      <span className="cursor-prompt-label">Click to enable sound</span>
+    </div>
+  );
+}
