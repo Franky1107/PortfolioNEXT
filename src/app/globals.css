@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------
+   DESIGN TOKENS — change colours here and they update everywhere.
+   ------------------------------------------------------------------ */
+:root {
+  /* The thread's accent colour (used ONLY by the thread): reddish pink.
+     Other ideas: deeper red-pink #E11D48 · hot pink #FF2E63 */
+  --accent: #f43f5e;
+  /* Grey used by the nav pill and the "Let's Connect" button */
+  --pill: #5f6267;
+}
+
+@theme inline {
+  --color-accent: var(--accent);
+  --color-pill: var(--pill);
+  /* Fonts are self-hosted from npm (see src/app/layout.tsx) */
+  --font-display: "Archivo Variable", "Archivo Black", system-ui, sans-serif;
+  --font-sans: "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, Menlo, monospace;
+}
+
+html {
+  background: #000;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #000;
+  color: #fff;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Extra-wide, extra-bold — the "Sourav Mallick" name */
+.type-wide {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-stretch: 125%;
+  letter-spacing: -0.02em;
+}
+
+/* Heavy, tight — the "FROM COMPLEX IDEAS…" heading */
+.type-heavy {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-stretch: 100%;
+  letter-spacing: -0.045em;
+}
+
+/* ------------------------------------------------------------------
+   THREAD — states driven by src/components/thread/Thread.tsx
+   ------------------------------------------------------------------ */
+
+/* Labels start hidden; the thread fades them in as it reaches them */
+[data-thread-label] {
+  opacity: 0;
+}
+
+/* Funnel items (Projects / Workflows / Visualizations) start dimmed */
+[data-thread-reveal] {
+  opacity: 0.35;
+  transition: opacity 0.3s ease;
+}
+
+/* Insight node: dim until the thread arrives, then glow + pulse */
+.thread-node .ring,
+.thread-node .core {
+  opacity: 0.3;
+  transition: opacity 0.4s ease;
+}
+.thread-node .glow {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity 0.4s ease;
+}
+.thread-node.is-lit .ring,
+.thread-node.is-lit .core {
+  opacity: 1;
+}
+.thread-node.is-lit .glow {
+  opacity: 1;
+  animation:
+    node-arrive 0.9s ease-out,
+    node-breathe 3.2s 0.9s ease-in-out infinite;
+}
+
+@keyframes node-arrive {
+  0% { transform: scale(0.3); opacity: 0; }
+  45% { transform: scale(1.35); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.85; }
+}
+@keyframes node-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.18); opacity: 0.55; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .thread-node.is-lit .glow { animation: none; opacity: 0.85; }
+  [data-thread-reveal] { transition: none; }
+}
