@@ -20,7 +20,7 @@ export default function FunnelSection() {
   return (
     <section
       id="approach"
-      className="relative grid min-h-[100svh] grid-cols-1 items-center gap-14 px-5 py-20 md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] md:gap-[3vw] md:px-[3vw] md:py-[6vh]"
+      className="relative grid min-h-[100svh] bg-beige text-ink grid-cols-1 items-center gap-14 px-5 py-20 md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] md:gap-[3vw] md:px-[3vw] md:py-[6vh]"
     >
       {/* LEFT — heading + line */}
       <div className="flex flex-col justify-between self-stretch md:py-[10vh]">
@@ -48,7 +48,7 @@ export default function FunnelSection() {
             <div data-thread={`label-${l.id}`} className="text-[11px] font-bold leading-4 tracking-[0.18em] md:text-[13px]">
               {l.title}
             </div>
-            <div className="pt-1 text-[10px] leading-[1.35] text-white/75 md:text-[10.5px]">{l.sub}</div>
+            <div className="pt-1 text-[10px] leading-[1.35] text-ink/70 md:text-[10.5px]">{l.sub}</div>
           </div>
         ))}
 
