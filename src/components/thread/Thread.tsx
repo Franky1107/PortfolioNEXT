@@ -364,7 +364,11 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
         onComplete: startPulse,
       });
     } else startPulse();
-    // wait for the loading screen to slide away before drawing
+    // let the loading screen know the thread is measured and ready
+    document.documentElement.dataset.threadReady = "1";
+    window.dispatchEvent(new Event("thread:ready"));
+
+    // wait for the loading screen to close before drawing
     const playIntro = () => introTween?.play();
     if (document.documentElement.dataset.loaded || !document.getElementById("loader")) playIntro();
     else window.addEventListener("loader:done", playIntro, { once: true });
