@@ -166,8 +166,11 @@ export const heroSegment: Segment = (ctx) => {
     pts.push({ x: gx, y: end.y + 8 });
     pts.push({ x: gx + 14, y: sweepY - 10 });
     // …and down to the bottom of the hero, exactly where the funnel thread picks up
+    // arrive straight down so it flows smoothly into the funnel thread below
     const seam = funnelEntryX(ctx);
-    pts.push({ x: lerp(gx, seam, 0.6), y: sweepY + 10 });
+    const into = hero.bottom - Math.max(36, (hero.bottom - sweepY) * 0.5);
+    pts.push({ x: lerp(gx, seam, 0.55), y: lerp(sweepY, into, 0.4) + 6 });
+    pts.push({ x: seam, y: into });
     pts.push({ x: seam, y: hero.bottom });
   } else {
     // left, above the tagline, down the left gutter beside the photo, then right under it
@@ -180,6 +183,7 @@ export const heroSegment: Segment = (ctx) => {
     pts.push({ x: gx + 22, y: sweepY });
     pts.push({ x: ctx.width * 0.5, y: sweepY + 16 });
     pts.push({ x: ctx.width - 9, y: sweepY + 46 });
+    pts.push({ x: ctx.width - 9, y: hero.bottom - 1 });
     pts.push({ x: ctx.width - 9, y: hero.bottom });
   }
 
@@ -216,6 +220,7 @@ export const funnelSegment: Segment = (ctx) => {
 
   // a. entry — picks up exactly where the hero thread left off (top edge of this section)
   pts.push({ x: funnelEntryX(ctx), y: 0 });
+  if (!ctx.mobile) pts.push({ x: funnelEntryX(ctx), y: Math.min(28, F.top * 0.4) });
   // on mobile, come down the right-hand gutter first
   if (ctx.mobile) pts.push({ x: ctx.width - 9, y: F.top - 0.1 * H });
   // a loose hanging string dropping into the tangle
