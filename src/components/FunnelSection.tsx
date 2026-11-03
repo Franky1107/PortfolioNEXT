@@ -19,10 +19,10 @@ const LABELS = [
 
 export default function FunnelSection() {
   return (
-    /* Laptops: the section is ~1.8 screens tall and its content stays pinned
+    /* Laptops: the section is ~2 screens tall and its content stays pinned
        on screen (sticky) while the thread draws the funnel.
        Phones: normal height, the thread draws as you scroll past. */
-    <section id="approach" className="relative bg-beige text-ink md:h-[180svh]">
+    <section id="approach" className="relative bg-beige text-ink md:h-[200svh]">
       <div className="md:sticky md:top-0 md:h-[100svh]">
         {/* starts at "top 85%" — the same moment the hero thread reaches this
             section's edge (THREAD.followAt), so the two read as one line */}
