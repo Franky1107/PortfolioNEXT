@@ -1,6 +1,8 @@
 import Image from "next/image";
 import StretchName from "./StretchName";
 
+const TAGLINE = "and I am not perfect";
+
 export default function Hero() {
   return (
     <section id="top" data-thread="hero" className="relative flex min-h-[100svh] flex-col px-5 pb-10 pt-24 md:px-[3vw] md:pb-0 md:pt-[96px]">
@@ -20,9 +22,21 @@ export default function Hero() {
             ]}
           />
 
-          <p data-thread="tagline" className="mt-20 max-w-[44ch] self-start text-[15px] leading-relaxed md:mt-[min(6vw,9svh)] md:max-w-none md:text-[length:min(1.4vw,2.6svh)] md:leading-[1.4]">
-            Software Engineer working across data engineering,
-            <br className="hidden md:block" /> AI and intelligent systems, transforming complex data into meaningful solutions.
+          {/* glowing line — each letter lights up in turn after the loading screen */}
+          <p
+            data-thread="tagline"
+            aria-label={TAGLINE}
+            className="glow-line mt-20 self-start text-[1.7rem] md:mt-[min(6vw,9svh)] md:text-[length:min(2.6vw,4.6svh)]"
+          >
+            {TAGLINE.split("").map((ch, i) =>
+              ch === " " ? (
+                " "
+              ) : (
+                <span key={i} aria-hidden className="glow-letter" style={{ "--i": i } as React.CSSProperties}>
+                  {ch}
+                </span>
+              ),
+            )}
           </p>
         </div>
 
