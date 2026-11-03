@@ -18,17 +18,17 @@ export default function Hero() {
     <section id="top" data-thread="hero" className="relative flex min-h-[100svh] flex-col px-5 pb-10 pt-24 md:px-[3vw] md:pb-0 md:pt-[96px]">
       <div className="grid flex-1 grid-cols-1 gap-10 md:grid-cols-[minmax(0,1fr)_30.3vw] md:gap-[3vw]">
         {/* LEFT — name + tagline */}
-        <div className="flex flex-col justify-center md:pb-[5vw] md:pt-[8vw]">
-          <p data-thread="iam" className="self-start pl-[0.15em] text-[1.35rem] font-medium tracking-[0.32em] md:text-[2.6vw]">
+        <div className="flex flex-col justify-center md:py-[3svh]">
+          <p data-thread="iam" className="self-start pl-[0.15em] text-[1.35rem] font-medium tracking-[0.32em] md:text-[length:min(2.6vw,4.4svh)]">
             I AM
           </p>
 
-          <h1 aria-label="Sourav Mallick" className="type-wide mt-1 text-[19.5vw] leading-[0.92] md:text-[13.2vw]">
+          <h1 aria-label="Sourav Mallick" className="type-wide mt-1 text-[19.5vw] leading-[0.92] md:text-[length:min(13.2vw,21svh)]">
             <Letters word="Sourav" anchor="name-1" />
             <Letters word="Mallick" anchor="name-2" />
           </h1>
 
-          <p data-thread="tagline" className="mt-20 max-w-[44ch] self-start text-[15px] leading-relaxed md:mt-[6vw] md:max-w-none md:text-[1.4vw] md:leading-[1.4]">
+          <p data-thread="tagline" className="mt-20 max-w-[44ch] self-start text-[15px] leading-relaxed md:mt-[min(6vw,9svh)] md:max-w-none md:text-[length:min(1.4vw,2.6svh)] md:leading-[1.4]">
             Software Engineer working across data engineering,
             <br className="hidden md:block" /> AI and intelligent systems, transforming complex data into meaningful solutions.
           </p>
