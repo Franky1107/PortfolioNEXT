@@ -1,154 +1,44 @@
-# PortfolioNEXT — Sourav Mallick
+# Sourav Mallick
 
-My portfolio homepage, rebuilt from the Canva design in code. One reddish-pink thread draws itself as you scroll. It weaves through my name and then turns into the data funnel.
+**Software Engineer working across data engineering, AI and intelligent systems, transforming complex data into meaningful solutions.**
 
-**Stack:** Next.js (App Router) · TypeScript · Tailwind CSS · GSAP ScrollTrigger · Vercel
-
----
-
-## 1. One-time setup (≈10 minutes)
-
-You need two free programs:
-
-1. **Node.js** (runs the project on your computer). Download the **LTS** version from <https://nodejs.org> and install it with the default options.
-2. **VS Code** (a code editor). Download it from <https://code.visualstudio.com>.
-
-To check that Node installed correctly, open a terminal. In VS Code, use **Terminal → New Terminal**. Then type:
-
-```bash
-node -v
-```
-
-You should see a version number such as `v22.x.x`.
-
-## 2. Run the site on your computer
-
-1. Unzip `PortfolioNEXT.zip` somewhere easy to find, for example `Documents/PortfolioNEXT`.
-2. In VS Code, choose **File → Open Folder…** and pick that folder.
-3. Open the terminal (**Terminal → New Terminal**) and run these commands one at a time:
-
-```bash
-npm install        # downloads the libraries (first time only, ~1 min)
-npm run dev        # starts the site
-```
-
-4. Open <http://localhost:3000> in your browser. Changes you save in VS Code appear there instantly.
-5. To stop the site, click in the terminal and press `Ctrl + C`.
-
-### Add your photo
-
-Replace `public/profile.jpg` with your full-resolution black-and-white portrait. Keep the same filename. The current file is a low-resolution crop taken from the Canva mock-up.
-
-## 3. Put it on GitHub (repository: `Franky1107/PortfolioNEXT`)
-
-The repository already exists and contains a README. In the VS Code terminal, inside the project folder, run:
-
-```bash
-git init
-git add .
-git commit -m "Homepage with scroll thread"
-git branch -M main
-git remote add origin https://github.com/Franky1107/PortfolioNEXT.git
-git pull origin main --allow-unrelated-histories   # merges in GitHub's README
-git push -u origin main
-```
-
-If `git pull` reports a conflict in `README.md`, keep this version of the file. Run `git add README.md` and `git commit`, then run `git push` again.
-
-> Prefer clicking to typing? Install **GitHub Desktop** (<https://desktop.github.com>). Use **File → Add local repository** to add this folder, then click **Publish/Push**.
-
-## 4. Deploy on Vercel (free)
-
-1. Go to <https://vercel.com> and click **Sign up → Continue with GitHub**.
-2. Click **Add New… → Project**, find **PortfolioNEXT**, and click **Import**.
-3. Leave every setting at its default. Vercel detects Next.js automatically. Click **Deploy**.
-4. After about a minute you get a live link, such as `portfolionext.vercel.app`.
-
-Every later `git push` to `main` redeploys the site automatically. To use your own domain, open the project in Vercel and go to **Settings → Domains**.
+🌐 **Visit:** [portfolionext-drab-gamma.vercel.app](https://portfolionext-drab-gamma.vercel.app)
 
 ---
 
-## Project structure
+## From complex ideas to simple experiences.
 
-```
-PortfolioNEXT/
-├─ public/
-│  └─ profile.jpg                ← your portrait
-├─ src/
-│  ├─ app/
-│  │  ├─ layout.tsx              ← fonts + page <head>
-│  │  ├─ page.tsx                ← the homepage: <Thread> wrapping the sections
-│  │  └─ globals.css             ← colours (--accent), fonts, node glow animation
-│  ├─ components/
-│  │  ├─ Nav.tsx                 ← SM logo, grey pill menu, Let's Connect
-│  │  ├─ Hero.tsx                ← "I AM / Sourav Mallick", tagline, photo
-│  │  ├─ FunnelSection.tsx       ← heading + funnel labels + 3 items
-│  │  ├─ NextSections.tsx        ← placeholder Projects/Workflows/… + footer
-│  │  ├─ icons.tsx               ← the 3 small item icons
-│  │  └─ thread/
-│  │     └─ Thread.tsx           ← the reusable thread engine
-│  └─ lib/thread/
-│     ├─ config.ts               ← ★ tweak timing, thickness, funnel layout here
-│     ├─ segments.ts             ← ★ the thread's route (one function per section)
-│     ├─ geometry.ts             ← curve maths: smoothing, scribble, wobble, rings
-│     └─ types.ts
-└─ package.json
-```
+I connect data, design and technology to create solutions that make sense.
 
-## How the thread works
+The way I work looks like a funnel:
 
-1. Elements the thread interacts with carry a `data-thread="…"` attribute, for example `data-thread="iam"`, one per letter of the name, `data-thread="photo"` and `data-thread="funnel"`.
-2. `Thread.tsx` measures them with `getBoundingClientRect()`. It does this again whenever the layout changes size.
-3. Each **segment** in `segments.ts` turns those measurements into points:
-   - **Hero** (draws itself automatically when the page loads, following the hand sketch): a ◎ start ring, into the "S", behind the left side of the "o", along the bottom of "u r", over the top and coiled round the "a", a hairpin line through the gap between the words, a loop round the "k" (behind its stem), a coil round the "c", and a spring down to a ◎ end ring. It never goes right of the photo's left edge, so it can't cross your face.
-   - **Funnel:** a hanging string, then the scribble tangle, the wobbly walls and rings that the thread draws by looping, the neck, and the Insight node. After that come three branches that draw together.
-4. All points are smoothed into **one** SVG path. That path is drawn twice:
-   - a **back layer** behind the text;
-   - a **front layer** above the text, with small "under" rectangles cut out of it. In those spots only the back layer shows, so the thread looks tucked behind a letter stroke, like the blue dotted marks in the sketch.
-5. GSAP ScrollTrigger (`scrub: true`) links scroll position to `stroke-dashoffset`. The thread draws on the way down and retracts on the way up. The tip runs about 85% of the way down the screen, so each part is finished while it is still in view.
-6. After the hero has drawn, a short bright spark keeps travelling along it from the start ring to the end ring, so the thread never sits still. Its length, speed and pause are `pulseLength`, `pulseSpeed` and `pulsePause` in `config.ts`.
-7. Labels and leader lines fade in when the thread passes them. The node lights up with a glow pulse when the thread arrives.
+| | |
+|---|---|
+| **Raw data** | Large · Messy · Diverse |
+| **Pipeline** | Process · Clean · Transform |
+| **Insight** | Actionable · Reliable · Value |
 
-Built in:
+At the end of the funnel, an insight turns into something people can use: **projects**, **workflows** and **visualizations**.
 
-- **Mobile:** the layout stacks vertically and the thread takes gentler curves through every second letter. It runs down the side gutters, past the photo rather than across it, and the funnel is smaller.
-- **Reduced motion:** for people who turn animations off in their system settings, the thread appears fully drawn with no animation.
-- **Never blocks clicks:** both thread layers use `pointer-events: none`.
+## What I work on
 
-## Common tweaks
+- **Data engineering:** turning large, messy data into clean pipelines people can rely on
+- **AI:** building intelligent features on top of that data
+- **Intelligent systems:** bringing data, models and design together into solutions that make sense
 
-| I want to…                         | Change                                                          |
-| ---------------------------------- | --------------------------------------------------------------- |
-| Change the thread colour           | `--accent` in `src/app/globals.css`                             |
-| Make the thread thicker or thinner | `strokeWidth` in `src/lib/thread/config.ts`                     |
-| Make it draw slower or faster      | `followAt`, `minScrollPerPx` and `introDuration` in `config.ts` |
-| Make the tangle messier or calmer  | `FUNNEL.tangle.loops`, `points` or `seed` in `config.ts`        |
-| Wobble the funnel walls more       | `FUNNEL.wobble` in `config.ts`                                  |
-| Move labels or items               | `FUNNEL.labelX`, `labelY`, `itemDx` and `itemY` in `config.ts`  |
-| Change menu links                  | `LINKS` in `src/components/Nav.tsx`                             |
-| Change the funnel item links       | `ITEMS` in `src/components/FunnelSection.tsx`                   |
-| Use "Unbounded" for the name       | `npm i @fontsource-variable/unbounded`, import it in `layout.tsx`, set `.type-wide`'s font-family |
+## On the site
 
-## Extending the thread into a new section
+- **About:** who I am and how I think
+- **Projects:** things I've built
+- **Workflows:** how data moves from raw to ready
+- **Visualizations:** making data easy to understand
+- **Resume and Blog:** coming soon
 
-1. Build the section, for example an About section, inside `<Thread>` in `page.tsx`.
-2. Add `data-thread="about-title"` (or any name you like) to the elements the thread should visit.
-3. In `src/lib/thread/segments.ts`, write a new segment:
+## Let's connect
 
-   ```ts
-   export const aboutSegment: Segment = (ctx) => {
-     const t = ctx.box("about-title");
-     if (!t) return null;
-     return { points: [{ x: t.left - 20, y: t.top }, { x: t.right + 20, y: t.bottom }] };
-   };
-   ```
+- 🌐 Portfolio: [portfolionext-drab-gamma.vercel.app](https://portfolionext-drab-gamma.vercel.app)
+- 💻 GitHub: [@Franky1107](https://github.com/Franky1107)
 
-4. Add it to `SEGMENTS` in page order. The node and branches always appear at the end of the thread. To have the thread continue past the funnel, move the node and branches into your last segment.
+---
 
-## Fonts
-
-The fonts are self-hosted through npm, so no requests go to Google:
-
-- **Archivo** (variable width): extra-expanded for the name and normal width for the heavy heading
-- **Inter** for body text
-- **JetBrains Mono** for labels
+© Sourav Mallick
