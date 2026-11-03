@@ -14,12 +14,12 @@
  *      so it draws as you scroll down and retracts as you scroll up
  *   5. rebuilds whenever the layout changes size
  */
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { THREAD } from "@/lib/thread/config";
 import { clamp, moveTo, samplePath, smoothCommands } from "@/lib/thread/geometry";
-import { SEGMENTS } from "@/lib/thread/segments";
+import { ROUTES, type RouteName } from "@/lib/thread/segments";
 import type { Box, Branch, Connector, Pt, Segment } from "@/lib/thread/types";
 
 if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
@@ -41,11 +41,24 @@ type Geometry = {
 
 type Props = {
   children: React.ReactNode;
-  /** The route. Defaults to SEGMENTS from src/lib/thread/segments.ts */
-  segments?: Segment[];
+  /** Which route to draw (see ROUTES in src/lib/thread/segments.ts) */
+  route?: RouteName;
+  /**
+   * Optional: draw the whole thread across one scroll range instead of
+   * following the reader — used for the pinned funnel section.
+   * `trigger` is a CSS selector; start/end use ScrollTrigger's syntax.
+   */
+  scroll?: { trigger: string; start: string; end: string; startMobile?: string; endMobile?: string };
+  className?: string;
+  contentClassName?: string;
 };
 
-export default function Thread({ children, segments = SEGMENTS }: Props) {
+export default function Thread({ children, route = "hero", scroll, className = "", contentClassName = "" }: Props) {
+  const segments: Segment[] = ROUTES[route];
+  // unique ids so several threads can live on one page
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const maskId = `thread-front-${uid}`;
+  const glowId = `thread-glow-${uid}`;
   const rootRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const backRef = useRef<SVGPathElement>(null);
@@ -91,7 +104,8 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
       height: content.offsetHeight,
       mobile: window.innerWidth < THREAD.mobileBreakpoint,
       box: (n: string) => {
-        const el = root.querySelector(`[data-thread="${n}"]`);
+        // look inside this thread first, then anywhere on the page
+        const el = root.querySelector(`[data-thread="${n}"]`) ?? document.querySelector(`[data-thread="${n}"]`);
         return el ? toBox(el) : null;
       },
       boxes: (n: string) => Array.from(root.querySelectorAll(`[data-thread="${n}"]`)).map(toBox),
@@ -197,27 +211,39 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
     // The tip runs THREAD.followAt of the way down the screen, so each part is
     // finished while it is still visible. Dense parts (the tangle) get at least
     // THREAD.minScrollPerPx scroll per px of thread so they don't flash past.
-    const rootTop = root.getBoundingClientRect().top + window.scrollY;
-    const follow = window.innerHeight * THREAD.followAt;
     const sched = new Float32Array(n + 1);
-    let prev = 0;
-    for (let i = 0; i <= n; i++) {
-      const target = rootTop + ys[i] - follow;
-      if (i * step <= introLen + step) prev = 0;
-      else prev = Math.max(prev + step * THREAD.minScrollPerPx, target);
-      sched[i] = prev;
-    }
-    let bStart = prev;
-    const lowestEnd = Math.max(0, ...geo.branches.map((b) => b.end.y));
-    let bEnd = Math.max(bStart + THREAD.branchScroll, rootTop + lowestEnd - follow);
+    let bStart: number;
+    let bEnd: number;
+    if (scroll) {
+      // Fixed range (pinned section): the thread draws evenly across the range,
+      // the branches take the last part. Here "s" runs 0 → 1000 over the range.
+      const S = 1000;
+      const mainShare = geo.branches.length ? 0.86 : 1;
+      for (let i = 0; i <= n; i++) sched[i] = Math.min(1, (i * step) / L) * S * mainShare;
+      bStart = S * mainShare;
+      bEnd = S;
+    } else {
+      const rootTop = root.getBoundingClientRect().top + window.scrollY;
+      const follow = window.innerHeight * THREAD.followAt;
+      let prev = 0;
+      for (let i = 0; i <= n; i++) {
+        const target = rootTop + ys[i] - follow;
+        if (i * step <= introLen + step) prev = 0;
+        else prev = Math.max(prev + step * THREAD.minScrollPerPx, target);
+        sched[i] = prev;
+      }
+      bStart = prev;
+      const lowestEnd = Math.max(0, ...geo.branches.map((b) => b.end.y));
+      bEnd = Math.max(bStart + THREAD.branchScroll, rootTop + lowestEnd - follow);
 
-    // Make sure everything finishes before the page runs out of scroll
-    const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-    if (bEnd > maxScroll) {
-      const k = maxScroll / bEnd;
-      for (let i = 0; i <= n; i++) sched[i] *= k;
-      bStart *= k;
-      bEnd = maxScroll;
+      // Make sure everything finishes before the page runs out of scroll
+      const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      if (bEnd > maxScroll) {
+        const k = maxScroll / bEnd;
+        for (let i = 0; i <= n; i++) sched[i] *= k;
+        bStart *= k;
+        bEnd = maxScroll;
+      }
     }
 
     const lengthAt = (s: number) => {
@@ -322,7 +348,15 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
       s: bEnd,
       ease: "none",
       onUpdate: () => render(proxy.s),
-      scrollTrigger: { start: 0, end: bEnd, scrub: true },
+      scrollTrigger: scroll
+        ? {
+            trigger: scroll.trigger,
+            start: geo.mobile ? (scroll.startMobile ?? scroll.start) : scroll.start,
+            end: geo.mobile ? (scroll.endMobile ?? scroll.end) : scroll.end,
+            scrub: true,
+            invalidateOnRefresh: true,
+          }
+        : { start: 0, end: bEnd, scrub: true },
     });
 
     // After the intro, a short bright "spark" keeps travelling along the hero
@@ -363,7 +397,7 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
     const playIntro = () => introTween?.play();
     if (document.documentElement.dataset.loaded || !document.getElementById("loader")) playIntro();
     else window.addEventListener("loader:done", playIntro, { once: true });
-    render(Math.min(window.scrollY, bEnd));
+    render(scroll ? proxy.s : Math.min(window.scrollY, bEnd));
 
     return () => {
       window.removeEventListener("loader:done", playIntro);
@@ -372,7 +406,7 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
       tween.scrollTrigger?.kill();
       tween.kill();
     };
-  }, [geo]);
+  }, [geo, scroll]);
 
   /* ---------------------------------------------------------------- */
   /* 3. RENDER — back layer, your content, front layer                 */
@@ -395,7 +429,7 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
   };
 
   return (
-    <div ref={rootRef} className="relative overflow-x-clip">
+    <div ref={rootRef} className={`relative overflow-x-clip ${className}`}>
       {/* BACK LAYER — behind the content */}
       {geo && svgProps && (
         <svg {...svgProps} style={{ zIndex: 0 }}>
@@ -404,7 +438,7 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
       )}
 
       {/* CONTENT */}
-      <div ref={contentRef} className="relative" style={{ zIndex: 10 }}>
+      <div ref={contentRef} className={`relative ${contentClassName}`} style={{ zIndex: 10 }}>
         {children}
       </div>
 
@@ -413,13 +447,13 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
         <svg {...svgProps} style={{ zIndex: 20 }}>
           <defs>
             {/* white = draw the thread in front; black = hide it (it shows only behind the letters) */}
-            <mask id="thread-front" maskUnits="userSpaceOnUse" x={0} y={0} width={geo.width} height={geo.height}>
+            <mask id={maskId} maskUnits="userSpaceOnUse" x={0} y={0} width={geo.width} height={geo.height}>
               <rect width={geo.width} height={geo.height} fill="white" />
               {geo.under.map((b, i) => (
                 <rect key={i} x={b.left} y={b.top} width={b.width} height={b.height} fill="black" />
               ))}
             </mask>
-            <radialGradient id="thread-glow">
+            <radialGradient id={glowId}>
               <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.9" />
               <stop offset="40%" stopColor="var(--accent)" stopOpacity="0.35" />
               <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
@@ -427,13 +461,13 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
           </defs>
 
           {/* the same thread in front of the content, except where it tucks behind a letter */}
-          <path ref={frontRef} d={geo.d} style={threadStyle} mask="url(#thread-front)" />
+          <path ref={frontRef} d={geo.d} style={threadStyle} mask={`url(#${maskId})`} />
 
           {/* the travelling spark (same path, short bright dash) */}
           <path
             ref={pulseRef}
             d={geo.d}
-            mask="url(#thread-front)"
+            mask={`url(#${maskId})`}
             style={{
               fill: "none",
               stroke: "#fff",
@@ -462,7 +496,7 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
           {/* the Insight node */}
           {geo.node && (
             <g ref={nodeRef} className="thread-node" transform={`translate(${geo.node.at.x} ${geo.node.at.y})`}>
-              <circle className="glow" r={geo.node.r * 3.2} fill="url(#thread-glow)" />
+              <circle className="glow" r={geo.node.r * 3.2} fill={`url(#${glowId})`} />
               <circle className="ring" r={geo.node.r} fill="var(--beige)" stroke="var(--accent)" strokeWidth={1.8} />
               <circle className="core" r={geo.node.r * 0.36} fill="var(--accent)" />
             </g>
@@ -493,7 +527,7 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
 
           {/* glowing dot at the leading tip */}
           <g ref={tipRef} style={{ opacity: 0 }}>
-            <circle r={18} fill="url(#thread-glow)" />
+            <circle r={18} fill={`url(#${glowId})`} />
             <circle r={3.6} fill="white" />
           </g>
           {/* ◎ ring-dots (start and end of the hero thread) */}
@@ -506,7 +540,7 @@ export default function Thread({ children, segments = SEGMENTS }: Props) {
               transform={`translate(${p.x} ${p.y})`}
             >
               <g className="thread-ring">
-                <circle className="halo" r={stroke * 9} fill="url(#thread-glow)" />
+                <circle className="halo" r={stroke * 9} fill={`url(#${glowId})`} />
                 <circle r={Math.max(10, stroke * 4.6)} fill="black" stroke="var(--accent)" strokeWidth={stroke} />
                 <circle r={Math.max(3.5, stroke * 1.5)} fill="var(--accent)" />
               </g>
