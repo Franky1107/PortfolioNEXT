@@ -17,7 +17,9 @@ import { lerp, scribble, seeded, spiral, wobblyLine } from "./geometry";
 import type { Box, Connector, Pt, Segment } from "./types";
 
 /* ------------------------------------------------------------------ */
-/* 1. HERO — from "I AM", weaving through the name, sweeping below     */
+/* 1. HERO — a few calm gestures (drawn automatically on page load):   */
+/*    dot after "I AM" → loop round "Sourav" → one long line between   */
+/*    the two words → a circle round the "k" → a little squiggle down  */
 /* ------------------------------------------------------------------ */
 export const heroSegment: Segment = (ctx) => {
   const iam = ctx.box("iam");
@@ -26,78 +28,69 @@ export const heroSegment: Segment = (ctx) => {
   const photo = ctx.box("photo");
   const line1 = ctx.boxes("name-1"); // letters of "Sourav"
   const line2 = ctx.boxes("name-2"); // letters of "Mallick"
-  if (!iam || !tag || !hero || !line1.length || !line2.length) return null;
+  if (!iam || !tag || !hero || line1.length < 4 || line2.length < 2) return null;
 
   const m = ctx.mobile;
   const pts: Pt[] = [];
-  const over: Box[] = [];
-  const h = line1[0].height;
-
-  // How far the weave swings above/below the letters (gentler on mobile)
-  const amp = (m ? 0.08 : 0.16) * h;
-  // Mobile: cross every 2nd letter for a calmer path
-  const every = m ? 2 : 1;
+  const h = line1[0].height; // height of one line of the name
+  const S = line1[0];
+  const o = line1[1];
+  const r = line1[3];
+  const last1 = line1[line1.length - 1];
+  const k = line2[line2.length - 1];
 
   // Never cross the portrait: on desktop it sits to the right of the text,
-  // so the thread is not allowed to go further right than its left edge.
-  const maxX = !m && photo ? photo.left - 24 : ctx.width - 14;
+  // so the thread may not go further right than the photo's left edge.
+  const maxX = !m && photo ? photo.left - 24 : ctx.width - 10;
   const safeX = (x: number) => Math.min(Math.max(x, 8), maxX);
 
-  // 1 — start just after "I AM"
-  pts.push({ x: iam.right + 16, y: iam.cy });
+  // The thin gap between "Sourav" and "Mallick"
+  const gapY = line2[0].top - 0.02 * h;
 
-  // 2 — weave through the letters, alternating in front of / behind them
-  let side = 1; // +1 = swing below the letters next, -1 = above
-  let count = 0;
-  const weave = (letters: Box[], dir: 1 | -1) => {
-    const seq = (dir === 1 ? letters : [...letters].reverse()).filter((_, i) => i % every === 0);
-    seq.forEach((b, i) => {
-      // pass through the body of the letter…
-      pts.push({ x: b.cx, y: b.top + b.height * 0.52 });
-      // …every other letter, draw the thread IN FRONT of it
-      if (count++ % 2 === 0) over.push(b);
-      // …then swing above or below before the next letter
-      const next = seq[i + 1];
-      if (next) {
-        pts.push({
-          x: (b.cx + next.cx) / 2,
-          y: side > 0 ? Math.max(b.bottom, next.bottom) + amp : Math.min(b.top, next.top) - amp,
-        });
-        side *= -1;
-      }
-    });
-  };
+  // 1 — start dot just after "I AM"
+  pts.push({ x: iam.right + 20, y: iam.cy });
 
-  weave(line1, 1); // "Sourav", left → right
+  // 2 — over the top of "Sourav", down through the "o", round the left of the "S"
+  pts.push({ x: r.cx, y: S.top + 0.14 * h });
+  pts.push({ x: o.cx, y: S.top + 0.6 * h });
+  pts.push({ x: Math.max(18, S.left - 0.12 * h), y: S.top + 0.66 * h });
 
-  // turn around on the right, between the two lines
-  const end1 = line1[line1.length - 1];
-  const end2 = line2[line2.length - 1];
-  pts.push({
-    x: safeX(Math.max(end1.right, end2.right) + (m ? 0.12 : 0.3) * h),
-    y: (end1.bottom + line2[0].top) / 2,
-  });
+  // 3 — one long, straight line along the gap between the two words
+  pts.push({ x: S.cx, y: gapY });
+  pts.push({ x: line1[2].cx, y: gapY });
+  pts.push({ x: r.right, y: gapY });
+  pts.push({ x: last1.left, y: gapY });
 
-  weave(line2, -1); // "Mallick", right → left
+  // 4 — a loop round the "k", then down through it
+  pts.push({ x: safeX(k.right + 0.16 * h), y: k.top + 0.22 * h });
+  pts.push({ x: safeX(k.right + 0.1 * h), y: k.top + 0.72 * h });
+  pts.push({ x: k.cx, y: k.bottom + 0.08 * h });
+  pts.push({ x: k.left - 0.08 * h, y: k.top + 0.55 * h });
+  pts.push({ x: k.cx - 0.05 * h, y: k.top + 0.12 * h });
+  const exitX = safeX(k.cx + 0.12 * h);
+  pts.push({ x: exitX, y: k.bottom + 0.16 * h });
 
-  // 3 — leave the name on the left and sweep through the empty space
-  const first2 = line2[0];
-  pts.push({ x: Math.max(16, first2.left - 0.2 * h), y: first2.bottom + amp * 0.5 });
+  // in front of the "o" and the "k"; behind everything else
+  const over: Box[] = [o, k];
 
   if (!m) {
-    // Desktop: down past the tagline's left edge, then a long sweep to the right
-    const gx = Math.max(10, tag.left - 22);
-    pts.push({ x: gx, y: tag.cy });
+    // Desktop: a small squiggle dropping below the name, then a sweep right
     const floor = Math.max(tag.bottom, photo?.bottom ?? 0);
-    const sweepY = floor + Math.max(28, (hero.bottom - floor) * 0.42);
-    pts.push({ x: gx + 46, y: sweepY });
-    pts.push({ x: ctx.width * 0.3, y: sweepY + 14 });
-    pts.push({ x: ctx.width * 0.5, y: sweepY - 6 });
+    const sweepY = floor + Math.max(24, (hero.bottom - floor) * 0.45);
+    const drop = sweepY - (k.bottom + 0.16 * h);
+    pts.push({ x: exitX - 14, y: k.bottom + 0.16 * h + drop * 0.25 });
+    pts.push({ x: exitX + 10, y: k.bottom + 0.16 * h + drop * 0.5 });
+    pts.push({ x: exitX - 6, y: k.bottom + 0.16 * h + drop * 0.75 });
+    pts.push({ x: exitX + 30, y: sweepY });
+    pts.push({ x: ctx.width * 0.68, y: sweepY + 10 });
   } else {
-    // Mobile: down the left gutter (beside the photo, never across it),
-    // then sweep right underneath the photo
+    // Mobile: back left under the name, down the left gutter beside the
+    // photo (never across it), then right underneath the photo
     const gx = 9;
-    pts.push({ x: gx, y: tag.top });
+    pts.push({ x: k.left, y: k.bottom + 0.3 * h });
+    pts.push({ x: line2[1].cx, y: k.bottom + 0.34 * h });
+    pts.push({ x: gx + 6, y: tag.top - 6 });
+    pts.push({ x: gx, y: tag.bottom });
     if (photo) pts.push({ x: gx, y: photo.cy });
     const sweepY = (photo?.bottom ?? tag.bottom) + 30;
     pts.push({ x: gx + 22, y: sweepY });
@@ -105,7 +98,8 @@ export const heroSegment: Segment = (ctx) => {
     pts.push({ x: ctx.width - 9, y: sweepY + 46 });
   }
 
-  return { points: pts, over };
+  // everything up to here is drawn automatically when the page loads
+  return { points: pts, over, markers: { heroEnd: pts.length - 1 } };
 };
 
 /* ------------------------------------------------------------------ */

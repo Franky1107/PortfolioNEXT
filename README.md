@@ -100,12 +100,12 @@ PortfolioNEXT/
 1. Elements the thread interacts with carry a `data-thread="…"` attribute, for example `data-thread="iam"`, one per letter of the name, `data-thread="photo"` and `data-thread="funnel"`.
 2. `Thread.tsx` measures them with `getBoundingClientRect()`. It does this again whenever the layout changes size.
 3. Each **segment** in `segments.ts` turns those measurements into points:
-   - **Hero:** starts at "I AM" and weaves through every letter. It swings above and below and alternates **in front of** and **behind** the letters. It never goes right of the photo's left edge, so it can't cross your face. Then it sweeps below the tagline.
+   - **Hero** (draws itself automatically when the page loads): a dot after "I AM", one loop round "Sourav", a long straight line in the gap between the two words, a circle round the "k", then a small squiggle down. It never goes right of the photo's left edge, so it can't cross your face.
    - **Funnel:** a hanging string, then the scribble tangle, the wobbly walls and rings that the thread draws by looping, the neck, and the Insight node. After that come three branches that draw together.
 4. All points are smoothed into **one** SVG path. That path is drawn twice:
    - a **back layer** behind the text, where the letters hide it, so it reads as "under";
    - a **front layer** above the text, masked so it shows only on the "over" letters.
-5. GSAP ScrollTrigger (`scrub: true`) links scroll position to `stroke-dashoffset`. The thread draws on the way down and retracts on the way up. The tip follows about 62% of the way down the screen.
+5. GSAP ScrollTrigger (`scrub: true`) links scroll position to `stroke-dashoffset`. The thread draws on the way down and retracts on the way up. The tip runs about 85% of the way down the screen, so each part is finished while it is still in view.
 6. Labels and leader lines fade in when the thread passes them. The node lights up with a glow pulse when the thread arrives.
 
 Built in:
@@ -120,7 +120,7 @@ Built in:
 | ---------------------------------- | --------------------------------------------------------------- |
 | Change the thread colour           | `--accent` in `src/app/globals.css`                             |
 | Make the thread thicker or thinner | `strokeWidth` in `src/lib/thread/config.ts`                     |
-| Make it draw slower or faster      | `minScrollPerPx` and `followAt` in `config.ts`                  |
+| Make it draw slower or faster      | `followAt`, `minScrollPerPx` and `introDuration` in `config.ts` |
 | Make the tangle messier or calmer  | `FUNNEL.tangle.loops`, `points` or `seed` in `config.ts`        |
 | Wobble the funnel walls more       | `FUNNEL.wobble` in `config.ts`                                  |
 | Move labels or items               | `FUNNEL.labelX`, `labelY`, `itemDx` and `itemY` in `config.ts`  |

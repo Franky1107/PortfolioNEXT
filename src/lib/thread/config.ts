@@ -4,29 +4,37 @@
  */
 export const THREAD = {
   /** Thread thickness in px (desktop / mobile) */
-  strokeWidth: 1.6,
-  strokeWidthMobile: 1.4,
+  strokeWidth: 2.6,
+  strokeWidthMobile: 2.2,
 
   /** Below this window width the mobile layout + simpler path is used */
   mobileBreakpoint: 768,
 
   /**
    * Where the drawing tip tries to sit, as a fraction of the screen height.
-   * 0.62 = the tip follows ~62% of the way down the viewport as you scroll.
+   * 0.85 = the tip runs ~85% of the way down the screen, so each part is
+   * finished while it is still in view.
    */
-  followAt: 0.62,
+  followAt: 0.85,
 
   /**
    * Minimum scroll distance (px) per px of thread. Raise it to make dense
    * parts (the letter weave, the tangle) draw more slowly.
    */
-  minScrollPerPx: 0.1,
+  minScrollPerPx: 0.03,
 
   /** How many px of scrolling the three end branches take to draw */
-  branchScroll: 220,
+  branchScroll: 140,
 
   /** How long (in px of thread) a label takes to fade in after the tip passes */
   labelFade: 90,
+
+  /**
+   * The part of the thread up to this marker (the whole hero) draws itself
+   * automatically when the page loads, over introDuration seconds.
+   */
+  introMarker: "heroEnd",
+  introDuration: 1.8,
 
   /** Precision of the scroll → length lookup (px of thread per sample) */
   sampleStep: 6,
@@ -43,7 +51,7 @@ export const FUNNEL = {
   cx: 0.4,
 
   /** the raw-data scribble at the top */
-  tangle: { y: 0.15, rx: 0.26, ry: 0.1, loops: 28, points: 420, seed: 7 },
+  tangle: { y: 0.15, rx: 0.26, ry: 0.1, loops: 16, points: 260, seed: 7 },
 
   /** funnel mouth (top) and neck (bottom); "half" = half-width */
   rim: { y: 0.27, half: 0.23 },
