@@ -106,7 +106,8 @@ PortfolioNEXT/
    - a **back layer** behind the text;
    - a **front layer** above the text, with small "under" rectangles cut out of it. In those spots only the back layer shows, so the thread looks tucked behind a letter stroke, like the blue dotted marks in the sketch.
 5. GSAP ScrollTrigger (`scrub: true`) links scroll position to `stroke-dashoffset`. The thread draws on the way down and retracts on the way up. The tip runs about 85% of the way down the screen, so each part is finished while it is still in view.
-6. Labels and leader lines fade in when the thread passes them. The node lights up with a glow pulse when the thread arrives.
+6. After the hero has drawn, a short bright spark keeps travelling along it from the start ring to the end ring, so the thread never sits still. Its length, speed and pause are `pulseLength`, `pulseSpeed` and `pulsePause` in `config.ts`.
+7. Labels and leader lines fade in when the thread passes them. The node lights up with a glow pulse when the thread arrives.
 
 Built in:
 

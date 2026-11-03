@@ -34,7 +34,15 @@ export const THREAD = {
    * automatically when the page loads, over introDuration seconds.
    */
   introMarker: "heroEnd",
-  introDuration: 1.8,
+  introDuration: 3.2,
+
+  /**
+   * After the hero has drawn, a short bright spark keeps travelling along it
+   * (start ring → end ring), then pauses and repeats.
+   */
+  pulseLength: 90, // px
+  pulseSpeed: 520, // px per second
+  pulsePause: 1.4, // seconds between runs
 
   /** Precision of the scroll → length lookup (px of thread per sample) */
   sampleStep: 6,
