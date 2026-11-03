@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Nav from "./Nav";
 
 /** Splits a word into one <span> per letter so the thread can weave through them. */
 function Letters({ word, anchor }: { word: string; anchor: string }) {
@@ -16,10 +15,8 @@ function Letters({ word, anchor }: { word: string; anchor: string }) {
 
 export default function Hero() {
   return (
-    <section id="top" data-thread="hero" className="relative flex min-h-[100svh] flex-col px-5 pb-10 pt-6 md:px-[3vw] md:pb-0 md:pt-0">
-      <Nav />
-
-      <div className="mt-14 grid flex-1 grid-cols-1 gap-10 md:mt-[1.8vw] md:grid-cols-[minmax(0,1fr)_30.3vw] md:gap-[3vw]">
+    <section id="top" data-thread="hero" className="relative flex min-h-[100svh] flex-col px-5 pb-10 pt-24 md:px-[3vw] md:pb-0 md:pt-[96px]">
+      <div className="grid flex-1 grid-cols-1 gap-10 md:grid-cols-[minmax(0,1fr)_30.3vw] md:gap-[3vw]">
         {/* LEFT — name + tagline */}
         <div className="flex flex-col justify-center md:pb-[5vw] md:pt-[8vw]">
           <p data-thread="iam" className="self-start pl-[0.15em] text-[1.35rem] font-medium tracking-[0.32em] md:text-[2.6vw]">

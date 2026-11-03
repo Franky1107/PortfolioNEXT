@@ -1,39 +1,113 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 // Edit the links here. "#name" scrolls to the section with id="name".
 const LINKS = [
   { label: "About", href: "#about" },
-  { label: "Project", href: "#projects" },
+  { label: "Projects", href: "#projects" },
   { label: "Resume", href: "#resume" },
   { label: "Blog", href: "#blog" },
 ];
 
+const Arrow = ({ className = "" }: { className?: string }) => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden className={className}>
+    <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+/**
+ * Slim, fixed header.
+ * - transparent at the top of the page, frosted glass once you scroll
+ * - desktop: centred glass pill of links + white "Let's Connect" button
+ * - mobile: logo, "Let's Connect" and a menu button that opens the links
+ */
 export default function Nav() {
+  const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const solid = scrolled || open;
+
   return (
-    <header className="flex flex-wrap items-center justify-between gap-y-4">
-      {/* Logo */}
-      <a href="#top" className="text-[2rem] leading-none md:text-[clamp(2rem,3.3vw,3rem)]" aria-label="Sourav Mallick — home">
-        SM
-      </a>
+    <header
+      className={`fixed inset-x-0 top-0 z-50 border-b transition-[background-color,border-color,backdrop-filter] duration-300 ${
+        open
+          ? "border-white/10 bg-black/90 backdrop-blur-xl"
+          : solid
+            ? "border-white/10 bg-black/55 backdrop-blur-xl"
+            : "border-transparent bg-transparent"
+      }`}
+    >
+      <div className="relative flex h-16 items-center justify-between px-5 md:h-[72px] md:px-[3vw]">
+        {/* Logo */}
+        <a href="#top" aria-label="Sourav Mallick — home" className="type-wide text-[1.2rem] leading-none tracking-tight">
+          SM
+        </a>
 
-      {/* Centre pill — moves to its own full-width row on phones */}
-      <nav aria-label="Main" className="order-3 w-full rounded-[1.6rem] bg-pill md:order-none md:w-[54.5%] md:rounded-[2rem]">
-        <ul className="flex items-center justify-between px-5 py-3 text-[15px] md:justify-around md:px-[1.5vw] md:py-[1.55vw] md:text-[clamp(1rem,1.9vw,1.75rem)]">
-          {LINKS.map((l) => (
-            <li key={l.label}>
-              <a href={l.href} className="transition-opacity hover:opacity-70">
-                {l.label}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
+        {/* Desktop links — a small glass pill, centred */}
+        <nav aria-label="Main" className="absolute left-1/2 hidden -translate-x-1/2 md:block">
+          <ul className="flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.06] p-1 backdrop-blur-md">
+            {LINKS.map((l) => (
+              <li key={l.label}>
+                <a
+                  href={l.href}
+                  className="block rounded-full px-4 py-1.5 text-[14px] text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                >
+                  {l.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
 
-      {/* Call to action */}
-      <a
-        href="#contact"
-        className="rounded-[1.6rem] bg-pill px-5 py-3 text-[15px] transition-opacity hover:opacity-80 md:rounded-[2rem] md:px-[0.8vw] md:py-[1.55vw] md:text-[clamp(1rem,2.2vw,2rem)] md:leading-none"
-      >
-        Let’s Connect
-      </a>
+        <div className="flex items-center gap-2">
+          {/* Call to action */}
+          <a
+            href="#contact"
+            className="group inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[13px] font-medium text-black transition-colors hover:bg-white/85 md:text-[14px]"
+          >
+            Let’s Connect
+            <Arrow className="transition-transform duration-200 group-hover:translate-x-0.5" />
+          </a>
+
+          {/* Mobile menu button */}
+          <button
+            type="button"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            aria-controls="mobile-menu"
+            onClick={() => setOpen((o) => !o)}
+            className="grid h-9 w-9 place-items-center rounded-full border border-white/15 md:hidden"
+          >
+            <span className="relative block h-3 w-4">
+              <span className={`absolute left-0 h-[1.5px] w-4 bg-white transition-transform duration-200 ${open ? "top-1.5 rotate-45" : "top-0.5"}`} />
+              <span className={`absolute left-0 h-[1.5px] w-4 bg-white transition-transform duration-200 ${open ? "top-1.5 -rotate-45" : "top-2.5"}`} />
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile menu */}
+      {open && (
+        <nav id="mobile-menu" aria-label="Main" className="border-t border-white/10 px-5 pb-6 pt-2 md:hidden">
+          <ul className="flex flex-col">
+            {LINKS.map((l) => (
+              <li key={l.label}>
+                <a href={l.href} onClick={() => setOpen(false)} className="block border-b border-white/5 py-3 text-lg text-white/85">
+                  {l.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
     </header>
   );
 }
