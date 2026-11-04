@@ -62,7 +62,7 @@ function profile(pts: [number, number][], y: number) {
   return pts[pts.length - 1][1];
 }
 const BODY_W: [number, number][] = [
-  [-0.62, 0.86], [-0.3, 0.85], [-0.12, 0.8], [0.0, 0.69], [0.06, 0.52], [0.12, 0.3], [0.18, 0.19], [0.28, 0.165],
+  [-0.62, 0.6], [-0.42, 0.76], [-0.22, 0.83], [-0.08, 0.8], [0.0, 0.69], [0.06, 0.52], [0.12, 0.3], [0.18, 0.19], [0.28, 0.165],
 ];
 const BODY_D: [number, number][] = [
   [-0.62, 0.33], [-0.1, 0.32], [0.06, 0.26], [0.15, 0.19], [0.28, 0.17],
@@ -218,22 +218,37 @@ export default function PortraitThreads({ className = "" }: { className?: string
     const isTouch = !window.matchMedia("(hover: hover) and (pointer: fine)").matches;
     const threads = buildThreads();
 
+    // The canvas is bigger than its box: it spills left (over the name is
+    // fine), a little right and down to the end of the hero, so the whole
+    // figure fits with no hard edges. W×H is the box; L/R/T/B the overhang.
     let W = 0;
     let H = 0;
+    let L = 0;
+    let R = 0;
+    let T = 0;
+    let B = 0;
     let dpr = 1;
     const resize = () => {
       const r = wrap.getBoundingClientRect();
+      const vw = document.documentElement.clientWidth;
+      const sec = wrap.closest("section")?.getBoundingClientRect();
       dpr = Math.min(2, window.devicePixelRatio || 1);
       W = r.width;
       H = r.height;
-      canvas.width = Math.round(W * dpr);
-      canvas.height = Math.round(H * dpr);
-      canvas.style.width = `${W}px`;
-      canvas.style.height = `${H}px`;
+      L = Math.max(0, Math.min(r.left - 4, W * 1.2));
+      R = Math.max(0, Math.min(vw - r.right - 4, W * 0.3));
+      T = Math.max(0, Math.min(sec ? r.top - sec.top : 0, H * 0.08));
+      B = Math.max(0, Math.min(sec ? sec.bottom - r.bottom : 0, H * 0.6));
+      const cw = W + L + R;
+      const ch = H + T + B;
+      canvas.width = Math.round(cw * dpr);
+      canvas.height = Math.round(ch * dpr);
+      Object.assign(canvas.style, { left: `${-L}px`, top: `${-T}px`, width: `${cw}px`, height: `${ch}px` });
     };
     resize();
     const ro = new ResizeObserver(resize);
     ro.observe(wrap);
+    window.addEventListener("resize", resize);
 
     // form progress: 0 = ball, 1 = figure
     let goal = reduce ? 1 : 0;
@@ -261,17 +276,20 @@ export default function PortraitThreads({ className = "" }: { className?: string
       const time = now / 1000;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, W, H);
+      ctx.clearRect(0, 0, W + L + R, H + T + B);
       ctx.globalCompositeOperation = "lighter"; // overlapping threads glow brighter
       ctx.lineCap = "round";
 
       // scale: the figure is ~1.56 wide × ~1.62 tall (y from -0.62 to 1.0)
       // framed like the reference: the head fills the upper part, the
       // shoulders run off both sides and the chest is cut by the bottom edge
-      const S = Math.min((W * 0.46) / 0.53, (H * 0.9) / 1.25);
-      const baseX = W / 2;
+      // the whole bust (shoulders ±0.92, down to y -0.62) fits inside the canvas;
+      // the head stays centred on its box unless the shoulders would hit the edge
       const topY = H * 0.045;
-      const toScreen = (p: V3) => ({ x: baseX + p.x * S, y: topY + (1.0 - p.y) * S });
+      const S = Math.min((W * 0.46) / 0.53, (H + B - topY) / 1.66, (W + L + R) / 1.9);
+      const half = 0.95 * S;
+      const baseX = L + Math.min(Math.max(W / 2, -L + half), W + R - half);
+      const toScreen = (p: V3) => ({ x: baseX + p.x * S, y: T + topY + (1.0 - p.y) * S });
 
       // slow turn of the figure; the ball tumbles a bit faster
       const yaw = Math.sin(time * 0.25) * 0.32;
@@ -325,9 +343,9 @@ export default function PortraitThreads({ className = "" }: { className?: string
           const top = Math.max(0, nr.y) ** 2;
           const back = p.z < 0 ? 0.35 : 1; // threads on the far side are dimmer
           // fades towards the bottom of the chest, like the reference
-          const fade = smooth(Math.min(1, Math.max(0, (b.y - Y0) / 0.75)));
+          const fade = smooth(Math.min(1, Math.max(0, (b.y - Y0) / 0.8)));
           const headBoost = b.y > 0.45 ? 1.6 : b.y > 0.2 ? 1 : 0.75; // the head is the brightest part, like the reference
-          const figureA = (0.05 + 0.06 * rim + 0.27 * lit + 0.32 * top) * back * (0.3 + 0.7 * fade) * headBoost;
+          const figureA = (0.05 + 0.06 * rim + 0.27 * lit + 0.32 * top) * back * fade * headBoost;
           alphaSum += figureA * m + 0.16 * (1 - m);
           count++;
           // end of a piece → stroke it with its own brightness, start the next one here
@@ -376,8 +394,8 @@ export default function PortraitThreads({ className = "" }: { className?: string
 
     const onMove = (e: PointerEvent) => {
       const r = wrap.getBoundingClientRect();
-      mouse.x = e.clientX - r.left;
-      mouse.y = e.clientY - r.top;
+      mouse.x = e.clientX - r.left + L;
+      mouse.y = e.clientY - r.top + T;
     };
     const onEnter = (e: PointerEvent) => {
       if (e.pointerType !== "mouse") return;
@@ -407,6 +425,7 @@ export default function PortraitThreads({ className = "" }: { className?: string
       cancelAnimationFrame(raf);
       clearTimeout(autoTimer);
       ro.disconnect();
+      window.removeEventListener("resize", resize);
       io.disconnect();
       window.removeEventListener("loader:gone", onLoaded);
       window.removeEventListener("pointermove", onMove);
@@ -418,7 +437,7 @@ export default function PortraitThreads({ className = "" }: { className?: string
 
   return (
     <div ref={wrapRef} className={`relative touch-manipulation ${className}`} role="img" aria-label="Tangled threads that wrap into the figure of a person">
-      <canvas ref={canvasRef} className="absolute inset-0" />
+      <canvas ref={canvasRef} className="pointer-events-none absolute" />
       <span
         className={`pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap font-mono text-[11px] uppercase tracking-[0.14em] text-white/45 transition-opacity duration-500 ${hinted ? "opacity-0" : "opacity-100"}`}
       >

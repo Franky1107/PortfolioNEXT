@@ -5,7 +5,7 @@ const TAGLINE = "and I am not perfect";
 
 export default function Hero() {
   return (
-    <section id="top" data-thread="hero" className="relative flex min-h-[100svh] flex-col px-5 pb-10 pt-24 md:px-[3vw] md:pb-0 md:pt-[96px]">
+    <section id="top" data-thread="hero" className="relative flex overflow-clip min-h-[100svh] flex-col px-5 pb-10 pt-24 md:px-[3vw] md:pb-0 md:pt-[96px]">
       <div className="grid flex-1 grid-cols-1 gap-10 md:grid-cols-[minmax(0,1fr)_30.3vw] md:gap-[2vw]">
         {/* LEFT — name + tagline */}
         <div className="flex flex-col justify-center md:py-[3svh]">
