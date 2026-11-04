@@ -5,6 +5,7 @@ import CursorPrompt from "@/components/CursorPrompt";
 import Hero from "@/components/Hero";
 import FunnelSection from "@/components/FunnelSection";
 import NextSections from "@/components/NextSections";
+import WorkSection from "@/components/work/WorkSection";
 
 export default function Home() {
   return (
@@ -24,6 +25,8 @@ export default function Home() {
         <Hero />
       </Thread>
       <FunnelSection />
+      {/* sticky split screen: tentacle clock + project cards, helix thread between */}
+      <WorkSection />
       <NextSections />
     </main>
   );
