@@ -93,10 +93,10 @@ export default function TentacleClock({ className = "" }: { className?: string }
       const size = Math.min(W, H * 1.35);
       const cx = W / 2;
       const cy = H * 0.52;
-      const R = size * 0.38; // spiral radius at "00"
-      const digitPx = size * 0.15;
+      const R = size * 0.31; // spiral radius at "00"
+      const digitPx = size * 0.12;
       const origin = { x: cx, y: cy - digitPx * 0.42 }; // tentacles leave from just above the digits
-      const labelPx = Math.max(9, size * 0.03);
+      const labelPx = Math.max(9, size * 0.027);
       const time = now / 1000;
 
       ctx.font = `500 ${labelPx}px "JetBrains Mono Variable", ui-monospace, monospace`;

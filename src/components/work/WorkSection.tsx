@@ -1,6 +1,6 @@
 import { PROJECTS, type Project } from "@/lib/projects";
 import HelixThread from "./HelixThread";
-import Reveal from "./Reveal";
+import ScrollCards from "./ScrollCards";
 import SoundText from "./SoundText";
 import TentacleClock from "./TentacleClock";
 
@@ -50,17 +50,15 @@ export default function WorkSection() {
         </aside>
 
         {/* RIGHT — the project cards scroll past */}
-        <div data-helix-right className="flex flex-col gap-3 rounded-[18px] bg-[#0d0d0d] p-3 md:gap-[1.4vw] md:p-[1.4vw]">
+        <ScrollCards className="flex flex-col gap-3 rounded-[18px] bg-[#0d0d0d] p-3 md:gap-[1.4vw] md:p-[1.4vw]" helix>
           <div className="flex items-baseline justify-between px-2 pt-3 font-mono text-[11px] uppercase tracking-[0.12em] text-white/50 md:px-[0.6vw] md:pt-[0.6vw] md:text-[12px]">
             <span>Selected work</span>
             <span>{String(PROJECTS.length).padStart(2, "0")} projects</span>
           </div>
           {PROJECTS.map((p, i) => (
-            <Reveal key={p.name}>
-              <ProjectCard project={p} index={i} />
-            </Reveal>
+            <ProjectCard key={p.name} project={p} index={i} />
           ))}
-        </div>
+        </ScrollCards>
       </div>
     </section>
   );
@@ -70,12 +68,12 @@ function ProjectCard({ project: p, index }: { project: Project; index: number })
   const Tag = p.href ? "a" : "article";
   return (
     <Tag {...(p.href ? { href: p.href } : {})} data-sound className="project-card group block rounded-[14px] bg-[#161616] p-3 text-white md:p-[1vw]">
-      <div className="relative aspect-[16/10] overflow-hidden rounded-[10px]">
+      <div className="project-media relative aspect-[16/10] overflow-hidden rounded-[10px]">
         {p.image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={p.image} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
+          <img src={p.image} alt="" className="h-full w-full object-cover" />
         ) : (
-          <div className="project-art h-full w-full transition-transform duration-700 group-hover:scale-[1.03]" style={{ "--h": p.hue } as React.CSSProperties}>
+          <div className="project-art h-full w-full" style={{ "--h": p.hue } as React.CSSProperties}>
             <span className="type-wide absolute bottom-[6%] left-[5%] text-[clamp(3rem,7vw,7rem)] leading-none text-white/90">
               {String(index + 1).padStart(2, "0")}
             </span>
@@ -83,6 +81,7 @@ function ProjectCard({ project: p, index }: { project: Project; index: number })
           </div>
         )}
       </div>
+      <div className="project-text">
       <div className="flex flex-col gap-1 px-1 pb-1 pt-4 md:flex-row md:items-baseline md:justify-between md:gap-6">
         <h3 className="type-heavy text-[clamp(1.4rem,2.2vw,2rem)] leading-none">{p.name}</h3>
         <p className="shrink-0 font-mono text-[11px] uppercase tracking-[0.1em] text-white/55 md:text-[12px]">
@@ -90,6 +89,7 @@ function ProjectCard({ project: p, index }: { project: Project; index: number })
         </p>
       </div>
       <p className="px-1 pb-1 pt-2 text-[14px] leading-snug text-white/65">{p.description}</p>
+      </div>
     </Tag>
   );
 }

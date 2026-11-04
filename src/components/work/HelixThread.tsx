@@ -28,7 +28,6 @@ export default function HelixThread({ root }: { root: string }) {
   const [geo, setGeo] = useState<Geo | null>(null);
   const arcRefs = useRef<(SVGPathElement | null)[]>([]);
   const tipRef = useRef<SVGGElement>(null);
-  const startRef = useRef<SVGGElement>(null);
   const endRef = useRef<SVGGElement>(null);
   const lastKey = useRef("");
 
@@ -59,6 +58,10 @@ export default function HelixThread({ root }: { root: string }) {
     // split the helix into half-turns: front (cos θ > 0) and back (cos θ < 0)
     const pt = (th: number) => ({ x: cx + R * Math.sin(th), y: y0 + E + (P * (th + Math.PI / 2)) / (Math.PI * 2) + E * Math.cos(th) });
     const arcs: Arc[] = [];
+    // lead-in: straight down from the top edge of the section, where the funnel
+    // thread arrives, into the first turn (it meets the coil at a vertical tangent)
+    const first = pt(-Math.PI / 2);
+    arcs.push({ d: `M${first.x},0 L${first.x},${first.y}`, front: true });
     const per = HELIX.samplesPerHalfTurn;
     for (let a = -Math.PI / 2, k = 0; a < thetaMax - Math.PI / 2 - 1e-6; a += Math.PI, k++) {
       const b = Math.min(a + Math.PI, thetaMax - Math.PI / 2);
@@ -113,18 +116,16 @@ export default function HelixThread({ root }: { root: string }) {
         }
         left -= lens[i];
       });
-      // glowing tip at the drawing end (θ from the arc it's on)
+      // glowing tip at the drawing end
       const tip = tipRef.current;
       if (tip) {
-        if (tipArc >= 0) {
-          const th = -Math.PI / 2 + (tipArc + tipFrac) * Math.PI;
-          const x = geo.cx + geo.R * Math.sin(th);
-          const y = geo.y0 + geo.E + (geo.P * (th + Math.PI / 2)) / (Math.PI * 2) + geo.E * Math.cos(th);
-          tip.setAttribute("transform", `translate(${x} ${y})`);
+        const el = tipArc >= 0 ? els[tipArc] : null;
+        if (el) {
+          const q = el.getPointAtLength(tipFrac * lens[tipArc]);
+          tip.setAttribute("transform", `translate(${q.x} ${q.y})`);
           tip.style.opacity = "1";
         } else tip.style.opacity = "0";
       }
-      startRef.current?.classList.toggle("is-on", p > 0.001);
       endRef.current?.classList.toggle("is-on", p > 0.999);
     };
 
@@ -162,7 +163,7 @@ export default function HelixThread({ root }: { root: string }) {
       className="pointer-events-none absolute left-0 top-0 hidden md:block"
       style={{ zIndex: z }}
     >
-      {/* back halves first (underneath), then front halves on top */}
+      {/* back halves first (underneath), then front halves (and the lead-in) on top */}
       {[false, true].map((front) =>
         geo.arcs.map((a, i) =>
           a.front === front ? (
@@ -179,17 +180,13 @@ export default function HelixThread({ root }: { root: string }) {
       )}
       {(
         <>
-          {[
-            { ref: startRef, at: geo.start },
-            { ref: endRef, at: geo.end },
-          ].map(({ ref, at }, i) => (
-            <g key={i} ref={ref} transform={`translate(${at.x} ${at.y})`}>
-              <g className="thread-ring">
-                <circle r={Math.max(10, stroke * 4.6)} fill="var(--beige)" stroke="var(--accent)" strokeWidth={stroke} />
-                <circle r={Math.max(3.5, stroke * 1.5)} fill="var(--accent)" />
-              </g>
+          {/* ◎ end ring (the thread arrives from the funnel above, so no start ring) */}
+          <g ref={endRef} transform={`translate(${geo.end.x} ${geo.end.y})`}>
+            <g className="thread-ring">
+              <circle r={Math.max(10, stroke * 4.6)} fill="var(--beige)" stroke="var(--accent)" strokeWidth={stroke} />
+              <circle r={Math.max(3.5, stroke * 1.5)} fill="var(--accent)" />
             </g>
-          ))}
+          </g>
           <g ref={tipRef} style={{ opacity: 0 }}>
             <circle r={3.6} fill="var(--accent)" />
           </g>

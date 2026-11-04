@@ -37,6 +37,7 @@ type Geometry = {
   connectors: Connector[];
   node?: { at: Pt; r: number };
   branches: Branch[];
+  tail?: string;
 };
 
 type Props = {
@@ -66,6 +67,7 @@ export default function Thread({ children, route = "hero", scroll, className = "
   const tipRef = useRef<SVGGElement>(null);
   const ringRefs = useRef<(SVGGElement | null)[]>([]);
   const pulseRef = useRef<SVGPathElement>(null);
+  const tailRef = useRef<SVGPathElement>(null);
   // intro progress (0 → 1); kept across rebuilds so it only plays once
   const introRef = useRef({ p: 0 });
   const nodeRef = useRef<SVGGElement>(null);
@@ -118,6 +120,7 @@ export default function Thread({ children, route = "hero", scroll, className = "
     const connectors: Connector[] = [];
     let node: Geometry["node"];
     let branches: Branch[] = [];
+    let tail: string | undefined;
 
     for (const seg of segments) {
       const res = seg(ctx);
@@ -133,13 +136,14 @@ export default function Thread({ children, route = "hero", scroll, className = "
       connectors.push(...(res.connectors ?? []));
       if (res.node) node = res.node;
       if (res.branches) branches = res.branches;
+      if (res.tail) tail = res.tail;
     }
     if (points.length < 2) return;
 
     const commands = smoothCommands(points);
     const d = moveTo(points[0]) + commands.join("");
     // nothing actually moved (e.g. a resize event that changed nothing)? skip the rebuild
-    const key = `${ctx.width}|${ctx.height}|${ctx.mobile}|${d}`;
+    const key = `${ctx.width}|${ctx.height}|${ctx.mobile}|${d}|${tail ?? ""}`;
     if (key === lastKey.current) return;
     lastKey.current = key;
     setGeo({
@@ -155,6 +159,7 @@ export default function Thread({ children, route = "hero", scroll, className = "
       connectors,
       node,
       branches,
+      tail,
     });
   }, [segments]);
 
@@ -214,14 +219,20 @@ export default function Thread({ children, route = "hero", scroll, className = "
     const sched = new Float32Array(n + 1);
     let bStart: number;
     let bEnd: number;
+    let tStart = 0;
+    let tEnd = 0;
     if (scroll) {
       // Fixed range (pinned section): the thread draws evenly across the range,
       // the branches take the last part. Here "s" runs 0 → 1000 over the range.
       const S = 1000;
-      const mainShare = geo.branches.length ? 0.86 : 1;
+      // main thread → branches → tail (the thread carrying on to the next section)
+      const tailShare = geo.tail ? 0.1 : 0;
+      const mainShare = geo.branches.length ? 0.86 - tailShare : 1 - tailShare;
       for (let i = 0; i <= n; i++) sched[i] = Math.min(1, (i * step) / L) * S * mainShare;
       bStart = S * mainShare;
-      bEnd = S;
+      bEnd = S * (1 - tailShare);
+      tStart = bEnd;
+      tEnd = S;
     } else {
       const rootTop = root.getBoundingClientRect().top + window.scrollY;
       const follow = window.innerHeight * THREAD.followAt;
@@ -266,6 +277,9 @@ export default function Thread({ children, route = "hero", scroll, className = "
     const reveals = Array.from(root.querySelectorAll<HTMLElement>("[data-thread-reveal]"));
     const branchEls = branchRefs.current.slice(0, geo.branches.length);
     const branchLens = branchEls.map((el) => el?.getTotalLength() ?? 0);
+    const tailEl = tailRef.current;
+    const tailLen = tailEl?.getTotalLength() ?? 0;
+    if (tailEl) tailEl.style.strokeDasharray = `${tailLen} ${tailLen + 20}`;
 
     for (const p of [back, front]) p.style.strokeDasharray = `${L} ${L + 20}`;
     branchEls.forEach((el, i) => el && (el.style.strokeDasharray = `${branchLens[i]} ${branchLens[i] + 20}`));
@@ -333,6 +347,13 @@ export default function Thread({ children, route = "hero", scroll, className = "
         if (dot) dot.style.opacity = b > 0.97 ? "1" : "0";
       });
       reveals.forEach((el) => (el.style.opacity = String(0.35 + 0.65 * clamp((b - 0.7) / 0.3))));
+
+      // the tail carries the thread on to the next section
+      if (tailEl) {
+        const t = full ? 1 : clamp((s - tStart) / (tEnd - tStart || 1));
+        tailEl.style.strokeDashoffset = String(tailLen * (1 - t));
+        tailEl.style.visibility = t > 0 ? "visible" : "hidden";
+      }
     };
 
     // Respect reduced-motion: show everything, fully drawn, no animation
@@ -345,7 +366,7 @@ export default function Thread({ children, route = "hero", scroll, className = "
 
     const proxy = { s: 0 };
     const tween = gsap.to(proxy, {
-      s: bEnd,
+      s: Math.max(bEnd, tEnd),
       ease: "none",
       onUpdate: () => render(proxy.s),
       scrollTrigger: scroll
@@ -524,6 +545,9 @@ export default function Thread({ children, route = "hero", scroll, className = "
               />
             </g>
           ))}
+
+          {/* the thread carrying on to the next section */}
+          {geo.tail && <path ref={tailRef} d={geo.tail} style={threadStyle} />}
 
           {/* glowing dot at the leading tip */}
           <g ref={tipRef} style={{ opacity: 0 }}>
