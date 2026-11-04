@@ -98,6 +98,6 @@ export const HELIX = {
   backOpacity: 0.5, // the back half of each turn is a little fainter (depth)
   inset: 28, // px from the top/bottom of the project column
   samplesPerHalfTurn: 14, // smoothness of each half-turn
-  startAt: "75%", // starts drawing when the section's top reaches 75% of the screen…
+  startAt: "100%", // starts drawing as soon as the section's top edge comes on screen (the funnel thread hands over there)…
   endAt: "100%", // …and finishes as its bottom reaches the bottom of the screen
 } as const;

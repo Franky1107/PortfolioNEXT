@@ -58,6 +58,8 @@ export interface SegmentResult {
   node?: { at: Pt; r: number };
   /** Paths drawn simultaneously after the main thread completes */
   branches?: Branch[];
+  /** A path drawn after the branches — the thread carrying on to the next section */
+  tail?: string;
 }
 
 /** A function that reads the page and returns its piece of the thread. */

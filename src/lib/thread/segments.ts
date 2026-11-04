@@ -14,6 +14,7 @@
  */
 import { FUNNEL } from "./config";
 import { coil, lerp, scribble, seeded, spiral, spring, wobblyLine } from "./geometry";
+import { helixAnchor } from "./helix";
 import type { Box, Connector, Pt, Segment } from "./types";
 
 /* ------------------------------------------------------------------ */
@@ -293,12 +294,25 @@ export const funnelSegment: Segment = (ctx) => {
     return { d, end };
   });
 
+  // ---- tail: from under the middle item, down to this section's bottom edge,
+  //      exactly where the helix in the work section picks up
+  let tail: string | undefined;
+  const mid = ctx.boxes("funnel-item")[1];
+  const helix = helixAnchor();
+  if (mid && helix && !ctx.mobile) {
+    const a = { x: mid.cx, y: mid.bottom + 10 };
+    const b = { x: helix.entryX, y: ctx.height };
+    const dy = b.y - a.y;
+    tail = `M${a.x},${a.y} C${a.x},${a.y + dy * 0.55} ${b.x},${b.y - dy * 0.55} ${b.x},${b.y}`;
+  }
+
   return {
     points: pts,
     markers,
     connectors,
     node: { at: { x: cx, y: nodeY }, r },
     branches,
+    tail,
   };
 };
 

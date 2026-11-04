@@ -448,7 +448,7 @@ html[data-loader-gone] .glow-letter {
   font-family: var(--font-display);
   font-weight: 800;
   font-stretch: 100%;
-  font-size: clamp(2.6rem, 5.2vw, 5.4rem);
+  font-size: clamp(2.1rem, 4.1vw, 4.3rem);
   letter-spacing: -0.03em;
   line-height: 1;
   color: #1a0f0a;
@@ -462,18 +462,6 @@ html[data-loader-gone] .glow-letter {
 }
 @keyframes colon-blink {
   50% { opacity: 0.25; }
-}
-
-.reveal {
-  opacity: 0;
-  transform: translateY(48px);
-  transition:
-    opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.reveal.is-in {
-  opacity: 1;
-  transform: none;
 }
 
 /* placeholder artwork for project images (until you add real ones) */
@@ -499,6 +487,5 @@ html[data-loader-gone] .glow-letter {
   background-color: #1c1c1c;
 }
 @media (prefers-reduced-motion: reduce) {
-  .reveal { opacity: 1; transform: none; transition: none; }
   .clock-colon { animation: none; }
 }
