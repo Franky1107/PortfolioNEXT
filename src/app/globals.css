@@ -440,3 +440,65 @@ html[data-loader-gone] .glow-letter {
     text-shadow: 0 0 3px #fff, 0 0 10px rgba(255, 255, 255, 0.55), 0 0 22px var(--accent);
   }
 }
+
+/* ------------------------------------------------------------------
+   WORK SECTION — tentacle clock, project cards
+   ------------------------------------------------------------------ */
+.clock-digits {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-stretch: 100%;
+  font-size: clamp(2.6rem, 5.2vw, 5.4rem);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: #1a0f0a;
+  font-variant-numeric: tabular-nums;
+}
+.clock-colon {
+  display: inline-block;
+  margin: 0 0.06em;
+  transform: translateY(-0.06em);
+  animation: colon-blink 2s steps(1) infinite;
+}
+@keyframes colon-blink {
+  50% { opacity: 0.25; }
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(48px);
+  transition:
+    opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* placeholder artwork for project images (until you add real ones) */
+.project-art {
+  position: relative;
+  background:
+    radial-gradient(120% 90% at 85% 10%, hsl(var(--h) 85% 62% / 0.9), transparent 55%),
+    radial-gradient(90% 120% at 10% 100%, hsl(calc(var(--h) + 40) 70% 40% / 0.9), transparent 60%),
+    linear-gradient(135deg, hsl(var(--h) 30% 14%), hsl(calc(var(--h) + 20) 35% 8%));
+}
+.project-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 14px 14px;
+  mix-blend-mode: overlay;
+}
+.project-card {
+  transition: background-color 0.3s ease;
+}
+.project-card:hover {
+  background-color: #1c1c1c;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .clock-colon { animation: none; }
+}

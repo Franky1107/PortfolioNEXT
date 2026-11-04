@@ -84,3 +84,20 @@ export const FUNNEL = {
   labelX: 0.66,
   labelY: { raw: 0.12, pipeline: 0.37, insight: 0.6 },
 } as const;
+
+/**
+ * HELIX — the coil between the two columns of the work section.
+ * Uniform everywhere: every turn has the same radius, pitch and spacing.
+ */
+export const HELIX = {
+  radiusVw: 0.026, // radius as a fraction of the window width…
+  radiusMin: 26, // …kept between these (px)
+  radiusMax: 42,
+  pitch: 1.35, // vertical distance per full turn, × radius
+  tilt: 0.34, // how much the front/back halves separate (viewing angle), × radius
+  backOpacity: 0.5, // the back half of each turn is a little fainter (depth)
+  inset: 28, // px from the top/bottom of the project column
+  samplesPerHalfTurn: 14, // smoothness of each half-turn
+  startAt: "75%", // starts drawing when the section's top reaches 75% of the screen…
+  endAt: "100%", // …and finishes as its bottom reaches the bottom of the screen
+} as const;

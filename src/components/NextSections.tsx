@@ -2,7 +2,6 @@
 // Replace each one with the real section when you build it — and extend the
 // thread into it (see src/lib/thread/segments.ts).
 const SECTIONS = [
-  { id: "projects", title: "Projects" },
   { id: "workflows", title: "Workflows" },
   { id: "visualizations", title: "Visualizations" },
   { id: "about", title: "About" },
