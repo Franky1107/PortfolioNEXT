@@ -15,7 +15,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
  * Drawn on a <canvas> with requestAnimationFrame.
  */
 const PTS = 26; // points per thread
-const THREADS = 560; // how many threads make up the figure
+const THREADS = 700; // how many threads make up the figure
 const FORM_MS = 1300; // time to untangle into the figure
 const AUTO_HOLD_MS = 2800; // how long the automatic reveal holds
 
@@ -232,7 +232,7 @@ export default function PortraitThreads({ className = "" }: { className?: string
       const r = wrap.getBoundingClientRect();
       const vw = document.documentElement.clientWidth;
       const sec = wrap.closest("section")?.getBoundingClientRect();
-      dpr = Math.min(1.25, window.devicePixelRatio || 1); // fine threads look the same; far fewer pixels to fill
+      dpr = Math.min(2, window.devicePixelRatio || 1);
       W = r.width;
       H = r.height;
       L = Math.max(0, Math.min(r.left - 4, W * 1.2));
@@ -308,21 +308,6 @@ export default function PortraitThreads({ className = "" }: { className?: string
       const pullX = (dx * lean) / S;
       const pullY = (-dy * lean) / S;
 
-      // Pieces are grouped into a few brightness levels and each level is
-      // stroked once — ~16 strokes a frame instead of thousands.
-      const LEVELS = 16;
-      const MAX_A = 0.9;
-      const paths = Array.from({ length: LEVELS }, () => new Path2D());
-      const xs = new Float32Array(PTS);
-      const ys = new Float32Array(PTS);
-      const addPiece = (from: number, to: number, a: number) => {
-        const lvl = Math.min(LEVELS - 1, Math.round((Math.min(MAX_A, a) / MAX_A) * (LEVELS - 1)));
-        if (lvl <= 0) return;
-        const path = paths[lvl];
-        path.moveTo(xs[from], ys[from]);
-        for (let k = from + 1; k <= to; k++) path.lineTo(xs[k], ys[k]);
-      };
-
       for (let i = 0; i < threads.length; i++) {
         const th = threads[i];
         const m = ease(Math.min(1, Math.max(0, (prog * 1.5 - th.delay) / 1)));
@@ -331,7 +316,7 @@ export default function PortraitThreads({ className = "" }: { className?: string
         const per = Math.ceil((PTS - 1) / CH);
         let alphaSum = 0;
         let count = 0;
-        let pieceStart = 0;
+        ctx.beginPath();
         for (let j = 0; j < PTS; j++) {
           // figure position (rotated by yaw)
           const b = th.body[j];
@@ -345,8 +330,8 @@ export default function PortraitThreads({ className = "" }: { className?: string
           const qy = q.y + Math.cos(time * 0.5 + wob * 1.3 + j * 0.25) * 0.04 + pullY;
           const p = { x: qx + (bx - qx) * m, y: qy + (b.y - qy) * m, z: qz + (bz - qz) * m };
           const s = toScreen(p);
-          xs[j] = s.x;
-          ys[j] = s.y;
+          if (j === 0) ctx.moveTo(s.x, s.y);
+          else ctx.lineTo(s.x, s.y);
 
           // lighting: bright rims and top of the head, dark front of the face
           const nr = th.normal[j];
@@ -363,32 +348,25 @@ export default function PortraitThreads({ className = "" }: { className?: string
           const figureA = (0.05 + 0.06 * rim + 0.27 * lit + 0.32 * top) * back * fade * headBoost;
           alphaSum += figureA * m + 0.16 * (1 - m);
           count++;
-          // end of a piece → file it under its brightness, start the next one here
+          // end of a piece → stroke it with its own brightness, start the next one here
           if ((j > 0 && j % per === 0) || j === PTS - 1) {
-            addPiece(pieceStart, j, alphaSum / count);
-            pieceStart = j;
+            ctx.strokeStyle = `rgba(235,235,235,${Math.min(0.9, alphaSum / count)})`;
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(s.x, s.y);
             alphaSum = 0;
             count = 0;
           }
         }
-      }
-      ctx.lineWidth = 0.8;
-      for (let l = 1; l < LEVELS; l++) {
-        ctx.strokeStyle = `rgba(235,235,235,${((l / (LEVELS - 1)) * MAX_A).toFixed(3)})`;
-        ctx.stroke(paths[l]);
       }
       ctx.globalCompositeOperation = "source-over";
     };
 
     let raf = 0;
     let visible = true;
-    // ~30 fps is plenty for slow-moving threads and halves the drawing work
-    let lastDraw = 0;
     const loop = (now: number) => {
-      if (now - lastDraw >= 31) {
-        lastDraw = now;
-        draw(now);
-      }
+      draw(now);
       raf = visible && !reduce ? requestAnimationFrame(loop) : 0;
     };
     raf = requestAnimationFrame(loop);

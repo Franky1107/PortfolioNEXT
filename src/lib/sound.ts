@@ -15,8 +15,6 @@
  * Set `loopSeconds` to null for a normal track (the whole file loops).
  */
 export const SOUND = {
-  /** master switch — false hides every sound control and the cursor prompt */
-  enabled: false,
   src: "/audio/ambient.mp3",
   /** exact length of the seamless loop in the placeholder track */
   loopSeconds: 32 as number | null,
@@ -182,7 +180,6 @@ export function blip(kind: "hover" | "click") {
  * hover/click sounds. Returns a cleanup function.
  */
 export function initSound() {
-  if (!SOUND.enabled) return () => {};
   let saved: string | null = null;
   try {
     saved = localStorage.getItem(STORAGE_KEY);

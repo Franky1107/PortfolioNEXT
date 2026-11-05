@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { SOUND, getServerState, getState, subscribe, toggleSound } from "@/lib/sound";
+import { getServerState, getState, subscribe, toggleSound } from "@/lib/sound";
 
 type Link = { label: string; href: string };
 
@@ -46,7 +46,6 @@ export default function MenuIsland({ links }: { links: Link[] }) {
     >
       {/* MENU (default) */}
       <div className="menu-island__menu" aria-hidden={island}>
-        {SOUND.enabled && (
         <button
           type="button"
           data-sound-toggle
@@ -69,7 +68,6 @@ export default function MenuIsland({ links }: { links: Link[] }) {
             </svg>
           )}
         </button>
-        )}
         <ul className="flex items-center gap-1">
           {links.map((l) => (
             <li key={l.label}>
