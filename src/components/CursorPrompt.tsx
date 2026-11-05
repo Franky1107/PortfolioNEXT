@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
-import { SOUND, getServerState, getState, startSound, subscribe } from "@/lib/sound";
+import { getServerState, getState, startSound, subscribe } from "@/lib/sound";
 
 // becomes true once the loading screen has fully gone
 const subscribeLoaded = (cb: () => void) => {
@@ -21,7 +21,7 @@ export default function CursorPrompt() {
   const ref = useRef<HTMLDivElement>(null);
   const loaded = useSyncExternalStore(subscribeLoaded, getLoaded, getLoadedServer);
   // only at the start of each page load: hidden once music has played or been turned off
-  const active = SOUND.enabled && loaded && prompt && !playing;
+  const active = loaded && prompt && !playing;
 
   useEffect(() => {
     const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
@@ -67,7 +67,6 @@ export default function CursorPrompt() {
     };
   }, [active]);
 
-  if (!SOUND.enabled) return null;
   return (
     <div ref={ref} className="cursor-prompt-tag" data-visible="0" aria-hidden>
       <span className="cursor-prompt-square" />
