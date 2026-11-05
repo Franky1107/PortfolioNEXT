@@ -1,11 +1,12 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { getServerState, getState, subscribe, toggleSound } from "@/lib/sound";
+import { SOUND, getServerState, getState, subscribe, toggleSound } from "@/lib/sound";
 
 /** Phones: a small pink play button (shows moving bars while music plays). */
 export default function SoundToggle() {
   const { on, playing } = useSyncExternalStore(subscribe, getState, getServerState);
+  if (!SOUND.enabled) return null;
   return (
     <button
       type="button"

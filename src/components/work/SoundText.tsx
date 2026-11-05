@@ -1,11 +1,12 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { getServerState, getState, subscribe, toggleSound } from "@/lib/sound";
+import { SOUND, getServerState, getState, subscribe, toggleSound } from "@/lib/sound";
 
 /** "SOUND: ON / OFF" text switch for the clock panel (same sound as the header). */
 export default function SoundText() {
   const { on, playing } = useSyncExternalStore(subscribe, getState, getServerState);
+  if (!SOUND.enabled) return null;
   return (
     <button type="button" data-sound-toggle onClick={toggleSound} aria-pressed={on} className="group inline-flex items-center gap-2 uppercase">
       Sound:
