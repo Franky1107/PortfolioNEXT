@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { useRef } from "react";
-import { gsap, SplitText, useGSAP } from "@/lib/gsap";
+import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
+import { THREAD } from "@/lib/thread/config";
 
 /* ------------------------------------------------------------------
    CONTENT — edit everything here (or pass a `content` prop).
@@ -34,6 +35,8 @@ export const ABOUT: AboutContent = {
     { value: 8, unit: "TB", label: "moved" },
   ],
 };
+
+const RING_R = 12; // end-ring radius (px)
 
 /** glyphs the headline scrambles through before it settles */
 const GLYPHS = "!<>-_/[]{}=+*01";
@@ -68,8 +71,39 @@ export default function AboutSection({ content = ABOUT }: { content?: AboutConte
       const photoImg = q("[data-about-photo-img]")[0];
       const stats = q("[data-about-stat]");
       const statsRow = q("[data-about-stats]")[0];
+      const eyebrow = q("[data-about-eyebrow]")[0];
+      const tailPath = q<SVGPathElement>("[data-about-tail]")[0];
+      const tailRing = q<SVGGElement>("[data-about-ring]")[0];
+
+      /* The pink thread arrives from the "Scroll" band above and ends in a
+         ring just above the eyebrow (desktop only). */
+      let tailLen = 0;
+      const layoutTail = () => {
+        const s = section.getBoundingClientRect();
+        const e = eyebrow.getBoundingClientRect();
+        const x = e.left - s.left + 10; // same x the band's thread leaves at
+        const ringY = e.top - s.top - 26;
+        tailPath.setAttribute("d", `M${x},0 L${x},${ringY - RING_R}`);
+        tailRing.setAttribute("transform", `translate(${x} ${ringY})`);
+        tailLen = tailPath.getTotalLength();
+        tailPath.style.strokeDasharray = `${tailLen} ${tailLen + 20}`;
+      };
+      const drawTail = (p: number) => {
+        tailPath.style.strokeDashoffset = String(tailLen * (1 - p));
+        tailPath.style.visibility = p > 0.002 ? "visible" : "hidden";
+        tailRing.classList.toggle("is-on", p > 0.995);
+      };
 
       const mm = gsap.matchMedia();
+
+      // reduced motion on desktop: the thread is simply there, fully drawn
+      mm.add("(min-width: 768px) and (prefers-reduced-motion: reduce)", () => {
+        layoutTail();
+        drawTail(1);
+        const onResize = () => layoutTail();
+        window.addEventListener("resize", onResize);
+        return () => window.removeEventListener("resize", onResize);
+      });
 
       mm.add(
         {
@@ -161,6 +195,22 @@ export default function AboutSection({ content = ABOUT }: { content?: AboutConte
             },
           });
 
+          /* --- desktop: the thread's tail draws as the section scrolls up,
+                 finishing (ring and all) just before the pin starts ------ */
+          if (desktop) {
+            ScrollTrigger.create({
+              trigger: section,
+              start: "top bottom",
+              end: "top 12%",
+              scrub: true,
+              onRefresh: (self) => {
+                layoutTail();
+                drawTail(self.progress);
+              },
+              onUpdate: (self) => drawTail(self.progress),
+            });
+          }
+
           /* --- phones: each piece plays once as it scrolls in ---------- */
           if (!desktop) {
             scramble({ scrollTrigger: { trigger: headline, start: "top 88%", once: true } });
@@ -171,6 +221,7 @@ export default function AboutSection({ content = ABOUT }: { content?: AboutConte
           // put the finished text back when this version is torn down
           // (breakpoint change, reduced-motion switch, unmount)
           return () => {
+            drawTail(0);
             headline.textContent = content.headline;
             stats.forEach((stat, i) => {
               const num = stat.querySelector<HTMLElement>("[data-about-num]");
@@ -189,10 +240,23 @@ export default function AboutSection({ content = ABOUT }: { content?: AboutConte
       id="about"
       className="relative flex min-h-[100svh] items-center overflow-hidden border-t border-white/10 px-5 py-20 md:px-[3vw] md:pb-[4svh] md:pt-[calc(72px+4svh)]"
     >
-      <div className="grid w-full grid-cols-1 gap-10 md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-[5vw]">
+      {/* the thread's last stretch + its end ring (desktop) */}
+      <svg aria-hidden className="pointer-events-none absolute inset-0 hidden h-full w-full overflow-visible md:block">
+        <path data-about-tail fill="none" stroke="var(--accent)" strokeWidth={THREAD.strokeWidth} strokeLinecap="round" style={{ visibility: "hidden" }} />
+        <g data-about-ring>
+          <g className="thread-ring">
+            <circle r={RING_R} fill="var(--ink)" stroke="var(--accent)" strokeWidth={THREAD.strokeWidth} />
+            <circle r={4} fill="var(--accent)" />
+          </g>
+        </g>
+      </svg>
+
+      <div className="relative grid w-full grid-cols-1 gap-10 md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-[5vw]">
         {/* LEFT — headline, bio, stats */}
         <div className="flex min-w-0 flex-col">
-          <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-accent md:text-[12px]">{content.eyebrow}</p>
+          <p data-about-eyebrow className="self-start font-mono text-[11px] uppercase tracking-[0.14em] text-accent md:text-[12px]">
+            {content.eyebrow}
+          </p>
 
           <h2 aria-label={content.headline} className="type-heavy mt-4 whitespace-nowrap text-[8.4vw] leading-[0.95] md:text-[length:min(4.6vw,9svh)]">
             <span data-about-headline aria-hidden>
