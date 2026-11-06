@@ -28,7 +28,6 @@ export default function HelixThread({ root }: { root: string }) {
   const [geo, setGeo] = useState<Geo | null>(null);
   const arcRefs = useRef<(SVGPathElement | null)[]>([]);
   const tipRef = useRef<SVGGElement>(null);
-  const endRef = useRef<SVGGElement>(null);
   const lastKey = useRef("");
 
   /* 1. MEASURE + BUILD ------------------------------------------------ */
@@ -68,6 +67,13 @@ export default function HelixThread({ root }: { root: string }) {
       const pts = Array.from({ length: per + 1 }, (_, i) => pt(a + ((b - a) * i) / per));
       arcs.push({ d: moveTo(pts[0]) + smoothCommands(pts).join(""), front: k % 2 === 0 });
     }
+
+    // exit: from the last turn down to the bottom edge, straight under the gap,
+    // where the "Scroll" thread below picks it up (vertical tangent at the edge)
+    const last = pt(thetaMax - Math.PI / 2);
+    const h = s.height;
+    const k = Math.max(20, (h - last.y) * 0.5);
+    arcs.push({ d: `M${last.x},${last.y} C${last.x},${last.y + k} ${cx},${h - k} ${cx},${h}`, front: true });
 
     const key = `${s.width}|${s.height}|${cx}|${R}|${arcs.length}`;
     if (key === lastKey.current) return;
@@ -126,7 +132,6 @@ export default function HelixThread({ root }: { root: string }) {
           tip.style.opacity = "1";
         } else tip.style.opacity = "0";
       }
-      endRef.current?.classList.toggle("is-on", p > 0.999);
     };
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -180,13 +185,7 @@ export default function HelixThread({ root }: { root: string }) {
       )}
       {(
         <>
-          {/* ◎ end ring (the thread arrives from the funnel above, so no start ring) */}
-          <g ref={endRef} transform={`translate(${geo.end.x} ${geo.end.y})`}>
-            <g className="thread-ring">
-              <circle r={Math.max(10, stroke * 4.6)} fill="var(--beige)" stroke="var(--accent)" strokeWidth={stroke} />
-              <circle r={Math.max(3.5, stroke * 1.5)} fill="var(--accent)" />
-            </g>
-          </g>
+          {/* no rings: the thread arrives from the funnel above and carries on into the "Scroll" band below */}
           <g ref={tipRef} style={{ opacity: 0 }}>
             <circle r={3.6} fill="var(--accent)" />
           </g>
