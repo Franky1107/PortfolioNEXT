@@ -211,7 +211,7 @@ export default function AboutSection({ content = ABOUT }: { content?: AboutConte
                   scrollTrigger: {
                     trigger: section,
                     start: "top top",
-                    end: "+=260%",
+                    end: "+=330%",
                     pin: true,
                     scrub: 0.8,
                     anticipatePin: 1,
