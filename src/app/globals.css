@@ -489,3 +489,11 @@ html[data-loader-gone] .glow-letter {
 @media (prefers-reduced-motion: reduce) {
   .clock-colon { animation: none; }
 }
+
+/* No sideways scrolling: anything sliding in from the right (project cards,
+   the header on phones) is clipped at the page edge. `clip` (not `hidden`)
+   keeps sticky and pinned sections working. */
+html,
+body {
+  overflow-x: clip;
+}
