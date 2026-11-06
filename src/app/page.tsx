@@ -6,7 +6,6 @@ import Hero from "@/components/Hero";
 import FunnelSection from "@/components/FunnelSection";
 import NextSections from "@/components/NextSections";
 import WorkSection from "@/components/work/WorkSection";
-import ScrollWordThread from "@/components/ScrollWordThread";
 
 export default function Home() {
   return (
@@ -28,8 +27,6 @@ export default function Home() {
       <FunnelSection />
       {/* sticky split screen: tentacle clock + project cards, helix thread between */}
       <WorkSection />
-      {/* the thread writes "Scroll" here on its way into About me (desktop) */}
-      <ScrollWordThread />
       <NextSections />
     </main>
   );
