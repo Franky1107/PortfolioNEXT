@@ -1,10 +1,11 @@
 // Simple placeholder sections so the nav and funnel links have somewhere to go.
+import AboutSection from "./AboutSection";
+
 // Replace each one with the real section when you build it — and extend the
 // thread into it (see src/lib/thread/segments.ts).
 const SECTIONS = [
   { id: "workflows", title: "Workflows" },
   { id: "visualizations", title: "Visualizations" },
-  { id: "about", title: "About" },
 ];
 
 export default function NextSections() {
@@ -16,6 +17,8 @@ export default function NextSections() {
           <p className="mt-4 font-mono text-sm text-white/60">Coming soon.</p>
         </section>
       ))}
+
+      <AboutSection />
 
       <footer id="contact" className="border-t border-white/10 px-5 py-16 md:px-[3vw]">
         <h2 className="type-heavy text-[9vw] uppercase leading-none md:text-[4vw]">Let’s connect</h2>
