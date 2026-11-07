@@ -6,6 +6,15 @@ import Hero from "@/components/Hero";
 import FunnelSection from "@/components/FunnelSection";
 import NextSections from "@/components/NextSections";
 import WorkSection from "@/components/work/WorkSection";
+import AboutSection from "@/components/AboutSection";
+import PhotoAccordionMarquee from "@/components/PhotoAccordionMarquee";
+
+// gallery strip after About me — swap these for your own photos in /public/gallery
+const GALLERY = Array.from({ length: 8 }, (_, i) => ({
+  src: `/gallery/photo-${String(i + 1).padStart(2, "0")}.jpg`,
+  alt: `Placeholder photo ${i + 1}`,
+  caption: `Placeholder ${String(i + 1).padStart(2, "0")}`,
+}));
 
 export default function Home() {
   return (
@@ -27,6 +36,13 @@ export default function Home() {
       <FunnelSection />
       {/* sticky split screen: tentacle clock + project cards, helix thread between */}
       <WorkSection />
+      <AboutSection />
+      <section id="gallery" className="border-t border-white/10 py-20 md:py-[7vw]">
+        <p className="px-5 font-mono text-[11px] uppercase tracking-[0.14em] text-accent md:px-[3vw] md:text-[12px]">( Gallery )</p>
+        <div className="mt-8 md:mt-[3vw]">
+          <PhotoAccordionMarquee images={GALLERY} />
+        </div>
+      </section>
       <NextSections />
     </main>
   );
