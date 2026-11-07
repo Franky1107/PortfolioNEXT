@@ -10,8 +10,10 @@ import { THREAD } from "@/lib/thread/config";
  *   to a dot just above the photo strip (drawn as you scroll in).
  * - Hover / focus / tap a photo: the thread runs on from the dot down to that
  *   photo and draws a frame around it; leave and it pulls back into the dot.
+ * - Past the dot the thread carries on behind the photos to the bottom
+ *   centre, where the Let's connect section picks it up.
  * Place it inside a `relative` section that also holds the strip, marked
- * with [data-gallery-strip].
+ * with [data-gallery-strip] (which must sit above z-0).
  */
 const PAD = 9; // frame gap around the photo
 const R = 22; // frame corner radius
@@ -20,17 +22,19 @@ const DOT_GAP = 34; // dot sits this far above the strip
 export default function GalleryThread() {
   const svgRef = useRef<SVGSVGElement>(null);
   const dropRef = useRef<SVGPathElement>(null);
+  const passRef = useRef<SVGPathElement>(null);
   const frameRef = useRef<SVGPathElement>(null);
   const dotRef = useRef<SVGCircleElement>(null);
 
   useEffect(() => {
     const svg = svgRef.current;
     const drop = dropRef.current;
+    const pass = passRef.current;
     const frame = frameRef.current;
     const dot = dotRef.current;
     const section = svg?.parentElement;
     const strip = section?.querySelector<HTMLElement>("[data-gallery-strip]");
-    if (!svg || !drop || !frame || !dot || !section || !strip) return;
+    if (!svg || !drop || !pass || !frame || !dot || !section || !strip) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     // where the dot sits (section coordinates)
@@ -42,11 +46,15 @@ export default function GalleryThread() {
 
     /* 1. the drop from the top edge to the dot, drawn as the section scrolls in */
     let dropLen = 0;
+    let passLen = 0;
     const layoutDrop = () => {
       const d = dotPos();
       drop.setAttribute("d", `M${d.x},0 L${d.x},${d.y}`);
       dropLen = drop.getTotalLength();
       drop.style.strokeDasharray = `${dropLen} ${dropLen + 20}`;
+      pass.setAttribute("d", `M${d.x},${d.y} L${d.x},${section.getBoundingClientRect().height}`);
+      passLen = pass.getTotalLength();
+      pass.style.strokeDasharray = `${passLen} ${passLen + 20}`;
       dot.setAttribute("cx", String(d.x));
       dot.setAttribute("cy", String(d.y));
     };
@@ -68,6 +76,21 @@ export default function GalleryThread() {
       onUpdate: (self) => drawDrop(reduce ? 1 : self.progress),
     });
     drawDrop(reduce ? 1 : st.progress);
+
+    // ...then on behind the photos to the bottom edge as you keep scrolling
+    const drawPass = (p: number) => {
+      pass.style.strokeDashoffset = String(passLen * (1 - p));
+      pass.style.visibility = p > 0.002 ? "visible" : "hidden";
+    };
+    const st2 = ScrollTrigger.create({
+      trigger: section,
+      start: () => `top+=${Math.max(1, dotPos().y)} 55%`,
+      end: "bottom bottom",
+      scrub: reduce ? false : true,
+      onRefresh: (self) => drawPass(reduce ? 1 : self.progress),
+      onUpdate: (self) => drawPass(reduce ? 1 : self.progress),
+    });
+    drawPass(reduce ? 1 : st2.progress);
 
     /* 2. the frame around the active photo, following it while it widens / glides to a stop */
     let active: HTMLElement | null = null;
@@ -123,12 +146,18 @@ export default function GalleryThread() {
 
     return () => {
       st.kill();
+      st2.kill();
       io.disconnect();
       cancelAnimationFrame(raf);
     };
   }, []);
 
   return (
+    <>
+    {/* behind the photo strip */}
+    <svg aria-hidden className="pointer-events-none absolute inset-0 z-0 hidden h-full w-full md:block">
+      <path ref={passRef} fill="none" stroke="var(--accent)" strokeWidth={THREAD.strokeWidth} strokeLinecap="round" style={{ visibility: "hidden" }} />
+    </svg>
     <svg ref={svgRef} aria-hidden className="pointer-events-none absolute inset-0 z-10 hidden h-full w-full overflow-visible md:block">
       <path ref={dropRef} fill="none" stroke="var(--accent)" strokeWidth={THREAD.strokeWidth} strokeLinecap="round" style={{ visibility: "hidden" }} />
       <path
@@ -142,5 +171,6 @@ export default function GalleryThread() {
       />
       <circle ref={dotRef} r={5.5} fill="var(--accent)" style={{ opacity: 0, transition: "opacity 0.3s" }} />
     </svg>
+    </>
   );
 }

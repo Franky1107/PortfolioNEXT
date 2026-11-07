@@ -42,7 +42,7 @@ export default function Home() {
         {/* the thread from About me: drops to a dot, frames the photo you hover */}
         <GalleryThread />
         <p className="px-5 font-mono text-[11px] uppercase tracking-[0.14em] text-accent md:px-[3vw] md:text-[12px]">( Gallery )</p>
-        <div data-gallery-strip className="mt-8 md:mt-[6vw]">
+        <div data-gallery-strip className="relative z-[1] mt-8 md:mt-[6vw]">
           <PhotoAccordionMarquee images={GALLERY} />
         </div>
       </section>
