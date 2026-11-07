@@ -12,7 +12,9 @@ export type FormState = { error?: string };
 
 export async function login(_: FormState, form: FormData): Promise<FormState> {
   const secret = process.env.SESSION_SECRET;
-  if (!process.env.ADMIN_PASSWORD || !secret || secret.length < 32) return { error: "Login isn’t set up yet (ADMIN_PASSWORD / SESSION_SECRET)." };
+  if (!process.env.ADMIN_PASSWORD) return { error: "Login isn’t set up yet: ADMIN_PASSWORD is missing." };
+  if (!secret) return { error: "Login isn’t set up yet: SESSION_SECRET is missing." };
+  if (secret.length < 32) return { error: `SESSION_SECRET is too short (${secret.length} characters) — use at least 32, then redeploy.` };
   if (!passwordOk(String(form.get("password") ?? ""), process.env.ADMIN_PASSWORD)) {
     await new Promise((r) => setTimeout(r, 800)); // shortcut: slows guessing a little; add a Vercel Firewall rate limit on /admin/login for real protection
     return { error: "Wrong password." };
