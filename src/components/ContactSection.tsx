@@ -74,7 +74,8 @@ export default function ContactSection() {
   const hintRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const api = useRef<{ open: () => void; close: () => void } | null>(null);
-  const [sent, setSent] = useState(false);
+  // form status: "" | sending | sent | mailapp | an error message
+  const [status, setStatus] = useState("");
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -181,7 +182,7 @@ export default function ContactSection() {
       const dir = d > 20 ? { x: pull.x / d, y: pull.y / d } : { x: -1, y: 0 };
       gsap.to(pull, { x: dir.x * PULL_PX * 1.15, y: dir.y * PULL_PX * 1.15, duration: reduce ? 0 : 0.5, ease: "power3.out", onUpdate: render });
       gsap.to(sway, { x: 0, y: 0, duration: 0.4, onUpdate: render });
-      setSent(false);
+      setStatus("");
       dialog.showModal();
     };
     const retangle = () => {
@@ -246,14 +247,31 @@ export default function ContactSection() {
     };
   }, []);
 
-  // shortcut: no backend — "Send" opens the visitor's mail app with the message; swap for a form service/API route later
-  const send = (e: React.FormEvent<HTMLFormElement>) => {
+  // sends through /api/contact; if email isn't set up on the server yet, falls back to the visitor's mail app
+  const send = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const f = new FormData(e.currentTarget);
-    const subject = `Hello from ${f.get("name")}`;
-    const body = `${f.get("message")}\n\n— ${f.get("name")} (${f.get("email")})`;
+    const form = e.currentTarget;
+    const data = Object.fromEntries(new FormData(form));
+    setStatus("sending");
+    try {
+      const res = await fetch("/api/contact", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+      if (res.ok) {
+        setStatus("sent");
+        form.reset();
+        return;
+      }
+      if (res.status !== 503) {
+        setStatus((await res.json().catch(() => null))?.error ?? "Couldn’t send — please try again.");
+        return;
+      }
+    } catch {
+      setStatus("Couldn’t send — check your connection and try again.");
+      return;
+    }
+    const subject = `Hello from ${data.name}`;
+    const body = `${data.message}\n\n— ${data.name} (${data.email})`;
     window.location.href = `mailto:${CONTACT.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    setSent(true);
+    setStatus("mailapp");
   };
 
   return (
@@ -355,24 +373,30 @@ export default function ContactSection() {
               </svg>
             </button>
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-[3vw]">
-              <Field label="Your name" name="name" placeholder="Your name" autoComplete="name" autoFocus />
-              <Field label="Your email" name="email" type="email" placeholder="you@example.com" autoComplete="email" />
+              <Field label="Your name" name="name" placeholder="Your name" autoComplete="name" maxLength={100} autoFocus />
+              <Field label="Your email" name="email" type="email" placeholder="you@example.com" autoComplete="email" maxLength={200} />
             </div>
+            {/* spam trap: hidden from people, bots fill it in */}
+            <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden className="absolute -left-[9999px] h-px w-px opacity-0" />
             <label className="flex flex-col gap-3">
               <span className="font-mono text-[11px] uppercase tracking-[0.12em] md:text-[12px]">What’s on your mind?</span>
               <textarea
                 name="message"
                 required
                 rows={6}
+                maxLength={5000}
                 placeholder="A problem, an idea, or something you’re figuring out."
                 className="resize-none border-b border-white/25 bg-transparent pb-3 text-[1.15rem] outline-none placeholder:text-white/40 focus:border-accent md:text-[length:clamp(1.05rem,1.3vw,1.4rem)]"
               />
             </label>
             <div className="flex items-center justify-end gap-6">
-              {sent && <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-white/60">Opening your mail app…</p>}
+              <p role="status" className={`font-mono text-[11px] uppercase tracking-[0.12em] ${status === "sent" ? "text-accent" : "text-white/60"}`}>
+                {status === "sending" ? "Sending…" : status === "sent" ? "Sent — thank you! I’ll get back to you soon." : status === "mailapp" ? "Opening your mail app…" : status}
+              </p>
               <button
                 type="submit"
-                className="type-heavy group inline-flex items-center gap-3 border-b-2 border-white pb-2 text-[clamp(1.4rem,2.3vw,2.3rem)] uppercase leading-none transition-colors hover:border-accent hover:text-accent"
+                disabled={status === "sending"}
+                className="type-heavy disabled:opacity-50 group inline-flex items-center gap-3 border-b-2 border-white pb-2 text-[clamp(1.4rem,2.3vw,2.3rem)] uppercase leading-none transition-colors hover:border-accent hover:text-accent"
               >
                 Send message
                 <svg viewBox="0 0 24 24" className="h-[0.9em] w-[0.9em] transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
