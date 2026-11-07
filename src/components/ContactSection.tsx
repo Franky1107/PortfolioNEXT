@@ -45,7 +45,7 @@ export default function ContactSection() {
   const boxRef = useRef<HTMLDivElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
   const ringRef = useRef<SVGGElement>(null);
-  const hintRef = useRef<HTMLParagraphElement>(null);
+  const hintRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const api = useRef<{ open: () => void; close: () => void } | null>(null);
   const [sent, setSent] = useState(false);
@@ -170,6 +170,7 @@ export default function ContactSection() {
       return { x: e.clientX - s.left, y: e.clientY - s.top };
     };
     let grab = { x: 0, y: 0 };
+    let pressAt = 0;
     const down = (e: PointerEvent) => {
       if (open) return;
       dragging = true;
@@ -177,6 +178,7 @@ export default function ContactSection() {
       gsap.killTweensOf(pull);
       const p = toLocal(e);
       grab = { x: p.x - pull.x, y: p.y - pull.y };
+      pressAt = Math.hypot(pull.x, pull.y);
     };
     const move = (e: PointerEvent) => {
       if (!dragging) return;
@@ -188,7 +190,9 @@ export default function ContactSection() {
     const up = () => {
       if (!dragging) return;
       dragging = false;
-      if (Math.hypot(pull.x, pull.y) / PULL_PX >= PULL_OPEN * 0.85) openForm();
+      const d = Math.hypot(pull.x, pull.y);
+      // a plain click/tap on the ring (barely moved) also untangles and opens
+      if (d / PULL_PX >= PULL_OPEN * 0.85 || Math.abs(d - pressAt) < 6) openForm();
       else gsap.to(pull, { x: 0, y: 0, duration: 1.4, ease: "elastic.out(1, 0.45)", onUpdate: render });
     };
     ring.addEventListener("pointerdown", down);
@@ -240,14 +244,16 @@ export default function ContactSection() {
           <circle r={13} fill="var(--ink)" stroke="var(--accent)" strokeWidth={THREAD.strokeWidth} />
         </g>
       </svg>
-      <p
+      {/* clicking the label does the pull for you */}
+      <button
         ref={hintRef}
-        aria-hidden
-        className="pointer-events-none absolute z-10 -translate-x-1/2 font-mono text-[11px] uppercase tracking-[0.12em] text-white/80 transition-opacity duration-300 md:text-[12px]"
+        type="button"
+        onClick={() => api.current?.open()}
+        className="absolute z-30 -translate-x-1/2 px-2 py-1 font-mono text-[11px] uppercase tracking-[0.12em] text-white/80 transition-[opacity,color] duration-300 hover:text-accent md:text-[12px]"
         style={{ opacity: 0 }}
       >
         Pull to untangle
-      </p>
+      </button>
 
       {/* LEFT — headline, let's talk, back to top */}
       <div className="relative z-20 flex flex-col">
