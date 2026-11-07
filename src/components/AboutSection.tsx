@@ -38,8 +38,6 @@ export const ABOUT: AboutContent = {
   ],
 };
 
-const RING_R = 12; // end-ring radius (px)
-
 /** glyphs the headline scrambles through before it settles */
 const GLYPHS = "!<>-_/[]{}=+*01";
 
@@ -76,12 +74,12 @@ export default function AboutSection({ content = ABOUT }: { content?: AboutConte
       const slot = q("[data-about-scroll-slot]")[0];
       const threadPath = q<SVGPathElement>("[data-about-thread]")[0];
       const entryPath = q<SVGPathElement>("[data-about-thread-entry]")[0];
-      const ring = q<SVGGElement>("[data-about-ring]")[0];
       const tip = q<SVGCircleElement>("[data-about-tip]")[0];
 
       /* THE THREAD (desktop) — arrives from the helix in Projects at the top
          edge, drops into the gap between the text and the photo, writes
-         "Scroll" in one cursive stroke and ends in a ring.
+         "Scroll" in one cursive stroke, then carries on down to the bottom
+         centre, where the Gallery section picks it up.
          entry = top edge → start of the "S" (drawn as the section scrolls in)
          rest  = the word itself (the first step of the pinned timeline)   */
       let total = 0;
@@ -100,14 +98,20 @@ export default function AboutSection({ content = ABOUT }: { content?: AboutConte
         const base = g.top - s.top + g.height / 2 + u * 1.05; // word centred on the slot
         const word = SCROLL_WORD.place(wordX, base, u);
         const end = word[word.length - 1];
-        const ringPt = { x: end.x + u * 0.55, y: end.y - u * 0.2 };
+        const h = s.height;
+        const midX = s.width / 2; // the Gallery's thread starts at its top centre
+        const exit = [
+          { x: end.x + u * 0.5, y: end.y - u * 0.1 },
+          { x: midX + (end.x - midX) * 0.4, y: base + (h - base) * 0.45 },
+          { x: midX, y: h - Math.min(60, (h - base) * 0.3) },
+          { x: midX, y: h },
+        ];
 
         const entry = [{ x: cx, y: 0 }, { x: cx, y: Math.min(80, (word[0].y) * 0.25) }, word[0]];
-        const pts = [...entry, ...word.slice(1), ringPt];
+        const pts = [...entry, ...word.slice(1), ...exit];
         const cmds = smoothCommands(pts);
         threadPath.setAttribute("d", moveTo(pts[0]) + cmds.join(""));
         entryPath.setAttribute("d", moveTo(pts[0]) + cmds.slice(0, entry.length - 1).join(""));
-        ring.setAttribute("transform", `translate(${ringPt.x} ${ringPt.y})`);
         total = threadPath.getTotalLength();
         entryLen = entryPath.getTotalLength();
         threadPath.style.strokeDasharray = `${total} ${total + 20}`;
@@ -117,7 +121,6 @@ export default function AboutSection({ content = ABOUT }: { content?: AboutConte
         const len = Math.min(total, entryP * entryLen + wordP * (total - entryLen));
         threadPath.style.strokeDashoffset = String(total - len);
         threadPath.style.visibility = len > 0.3 ? "visible" : "hidden";
-        ring.classList.toggle("is-on", wordP > 0.995);
         if (len > 0.3 && len < total - 0.5) {
           const pt = threadPath.getPointAtLength(len);
           tip.setAttribute("cx", String(pt.x));
@@ -296,7 +299,7 @@ export default function AboutSection({ content = ABOUT }: { content?: AboutConte
       id="about"
       className="relative flex min-h-[100svh] items-center overflow-hidden border-t border-white/10 px-5 py-20 md:px-[3vw] md:pb-[4svh] md:pt-[calc(72px+4svh)]"
     >
-      {/* the pink thread + "Scroll" + its end ring (desktop) */}
+      {/* the pink thread + "Scroll" (desktop) */}
       <svg aria-hidden className="pointer-events-none absolute inset-0 hidden h-full w-full overflow-visible md:block">
         <path data-about-thread-entry fill="none" style={{ visibility: "hidden" }} />
         <path
@@ -309,12 +312,6 @@ export default function AboutSection({ content = ABOUT }: { content?: AboutConte
           style={{ visibility: "hidden" }}
         />
         <circle data-about-tip r={3.6} fill="var(--accent)" style={{ opacity: 0 }} />
-        <g data-about-ring>
-          <g className="thread-ring">
-            <circle r={RING_R} fill="var(--ink)" stroke="var(--accent)" strokeWidth={THREAD.strokeWidth} />
-            <circle r={4} fill="var(--accent)" />
-          </g>
-        </g>
       </svg>
 
       <div className="relative grid w-full grid-cols-1 gap-10 md:grid-cols-[minmax(0,36vw)_minmax(0,1fr)_auto] md:items-center md:gap-[2.5vw]">
