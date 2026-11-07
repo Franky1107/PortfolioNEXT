@@ -10,11 +10,11 @@ import AboutSection from "@/components/AboutSection";
 import PhotoAccordionMarquee from "@/components/PhotoAccordionMarquee";
 import GalleryThread from "@/components/GalleryThread";
 
-// gallery strip after About me — swap these for your own photos in /public/gallery
-const GALLERY = Array.from({ length: 8 }, (_, i) => ({
-  src: `/gallery/photo-${String(i + 1).padStart(2, "0")}.jpg`,
-  alt: `Placeholder photo ${i + 1}`,
-  caption: `Placeholder ${String(i + 1).padStart(2, "0")}`,
+// gallery strip after About me — generated thread studies for now; swap in your own photos in /public/gallery
+const GALLERY = ["Flow", "Orbit", "Signal", "Tide", "Drift", "Pulse", "Field", "Weave"].map((name, i) => ({
+  src: `/gallery/art-${String(i + 1).padStart(2, "0")}.jpg`,
+  alt: `Generative artwork: ${name.toLowerCase()} of threads`,
+  caption: `Study ${String(i + 1).padStart(2, "0")} — ${name}`,
 }));
 
 export default function Home() {
