@@ -50,7 +50,7 @@ export default function WorkSection() {
         </aside>
 
         {/* RIGHT — the project cards scroll past */}
-        <ScrollCards className="flex flex-col gap-3 rounded-[18px] bg-[#0d0d0d] p-3 md:gap-[calc(1.4vw+14svh)] md:p-[1.4vw]" helix>
+        <ScrollCards className="flex flex-col gap-3 rounded-[18px] bg-[#0d0d0d] p-3 md:gap-[calc(1.4vw+49svh)] md:p-[1.4vw]" helix>
           <div className="flex items-baseline justify-between px-2 pt-3 font-mono text-[11px] uppercase tracking-[0.12em] text-white/50 md:px-[0.6vw] md:pt-[0.6vw] md:text-[12px]">
             <span>Selected work</span>
             <span>{String(PROJECTS.length).padStart(2, "0")} projects</span>
