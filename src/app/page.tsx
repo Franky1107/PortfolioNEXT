@@ -8,6 +8,7 @@ import NextSections from "@/components/NextSections";
 import WorkSection from "@/components/work/WorkSection";
 import AboutSection from "@/components/AboutSection";
 import PhotoAccordionMarquee from "@/components/PhotoAccordionMarquee";
+import GalleryThread from "@/components/GalleryThread";
 
 // gallery strip after About me — swap these for your own photos in /public/gallery
 const GALLERY = Array.from({ length: 8 }, (_, i) => ({
@@ -37,9 +38,11 @@ export default function Home() {
       {/* sticky split screen: tentacle clock + project cards, helix thread between */}
       <WorkSection />
       <AboutSection />
-      <section id="gallery" className="border-t border-white/10 py-20 md:py-[7vw]">
+      <section id="gallery" className="relative border-t border-white/10 py-20 md:py-[7vw]">
+        {/* the thread from About me: drops to a dot, frames the photo you hover */}
+        <GalleryThread />
         <p className="px-5 font-mono text-[11px] uppercase tracking-[0.14em] text-accent md:px-[3vw] md:text-[12px]">( Gallery )</p>
-        <div className="mt-8 md:mt-[3vw]">
+        <div data-gallery-strip className="mt-8 md:mt-[6vw]">
           <PhotoAccordionMarquee images={GALLERY} />
         </div>
       </section>
