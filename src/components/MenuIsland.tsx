@@ -73,7 +73,7 @@ export default function MenuIsland({ links }: { links: Link[] }) {
             <li key={l.label}>
               <a
                 href={l.href}
-                {...(l.href.startsWith("#") ? {} : { target: "_blank", rel: "noreferrer" })}
+                {...(/\.pdf$|^https?:/.test(l.href) ? { target: "_blank", rel: "noreferrer" } : {})}
                 tabIndex={island ? -1 : 0}
                 className="block rounded-full px-4 py-1.5 text-[14px] text-white/80 transition-colors hover:bg-white/10 hover:text-white"
               >
