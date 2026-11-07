@@ -128,6 +128,17 @@ export default function AboutSection({ content = ABOUT }: { content?: AboutConte
 
       const mm = gsap.matchMedia();
 
+      // "About" links jump to the END of the pinned sequence (everything shown),
+      // not its start; without a pin (phones, reduced motion) the normal anchor jump is fine
+      let pin: ScrollTrigger | undefined;
+      const onAboutLink = (e: MouseEvent) => {
+        if (!pin || !(e.target instanceof Element) || !e.target.closest('a[href="#about"]')) return;
+        e.preventDefault();
+        window.scrollTo({ top: pin.end, behavior: "instant" });
+        history.replaceState(null, "", "#about");
+      };
+      document.addEventListener("click", onAboutLink);
+
       // reduced motion on desktop: the thread and the word are simply there
       mm.add("(min-width: 768px) and (prefers-reduced-motion: reduce)", () => {
         entryP = wordP = 1;
@@ -233,6 +244,7 @@ export default function AboutSection({ content = ABOUT }: { content?: AboutConte
                   .add(photoReveal(), "reveal")
                   .add(counters(), ">+0.05")
                   .to({}, { duration: 0.35 }); // short hold before the pin releases
+                pin = tl.scrollTrigger;
                 return tl;
               }
               // phones: the bio plays on its own as it enters
@@ -268,6 +280,7 @@ export default function AboutSection({ content = ABOUT }: { content?: AboutConte
           // put the finished text back when this version is torn down
           // (breakpoint change, reduced-motion switch, unmount)
           return () => {
+            pin = undefined;
             entryP = wordP = 0;
             drawThread();
             headline.textContent = content.headline;
@@ -278,6 +291,7 @@ export default function AboutSection({ content = ABOUT }: { content?: AboutConte
           };
         },
       );
+      return () => document.removeEventListener("click", onAboutLink);
     },
     { scope: root, dependencies: [content] },
   );
