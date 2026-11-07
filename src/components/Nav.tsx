@@ -6,13 +6,16 @@ import MenuIsland from "./MenuIsland";
 import { initSound } from "@/lib/sound";
 import { navTargets, smoothScrollTo } from "@/lib/gsap";
 
-// Edit the links here. "#name" scrolls to the section with id="name".
+// Edit the links here. "#name" scrolls to the section with id="name";
+// anything else (like the resume PDF) opens in a new tab.
 const LINKS = [
   { label: "About", href: "#about" },
   { label: "Projects", href: "#projects" },
-  { label: "Resume", href: "#resume" },
+  { label: "Resume", href: "/resume.pdf" },
   { label: "Blog", href: "#blog" },
 ];
+
+const newTab = (href: string) => (href.startsWith("#") ? {} : { target: "_blank", rel: "noreferrer" });
 
 const Arrow = ({ className = "" }: { className?: string }) => (
   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden className={className}>
@@ -118,7 +121,7 @@ export default function Nav() {
           <ul className="flex flex-col">
             {LINKS.map((l) => (
               <li key={l.label}>
-                <a href={l.href} onClick={() => setOpen(false)} className="block border-b border-white/5 py-3 text-lg text-white/85">
+                <a href={l.href} {...newTab(l.href)} onClick={() => setOpen(false)} className="block border-b border-white/5 py-3 text-lg text-white/85">
                   {l.label}
                 </a>
               </li>
