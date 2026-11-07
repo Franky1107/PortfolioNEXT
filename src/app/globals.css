@@ -447,7 +447,7 @@ html[data-loader-gone] .glow-letter {
   font-family: var(--font-display);
   font-weight: 800;
   font-stretch: 100%;
-  font-size: clamp(2.1rem, 4.1vw, 4.3rem);
+  font-size: clamp(2.4rem, 5vw, 5.4rem);
   letter-spacing: -0.03em;
   line-height: 1;
   color: #1a0f0a;
