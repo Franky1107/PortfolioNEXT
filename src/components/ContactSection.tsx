@@ -16,8 +16,8 @@ import type { Pt } from "@/lib/thread/types";
  */
 const CONTACT = {
   lines: ["Got something", "complex?", "Let’s", "connect."],
-  // TODO: your email — the form opens the visitor's mail app addressed to it
-  email: "",
+  // the form opens the visitor's mail app addressed to this
+  email: "souravmallick900@gmail.com",
 };
 
 // the knot, designed in a 600 × 720 box and fitted into the right-hand column
