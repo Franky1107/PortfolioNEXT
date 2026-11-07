@@ -4,7 +4,7 @@ import Loader from "@/components/Loader";
 import CursorPrompt from "@/components/CursorPrompt";
 import Hero from "@/components/Hero";
 import FunnelSection from "@/components/FunnelSection";
-import NextSections from "@/components/NextSections";
+import ContactSection from "@/components/ContactSection";
 import WorkSection from "@/components/work/WorkSection";
 import AboutSection from "@/components/AboutSection";
 import PhotoAccordionMarquee from "@/components/PhotoAccordionMarquee";
@@ -46,7 +46,7 @@ export default function Home() {
           <PhotoAccordionMarquee images={GALLERY} />
         </div>
       </section>
-      <NextSections />
+      <ContactSection />
     </main>
   );
 }
