@@ -496,3 +496,18 @@ html,
 body {
   overflow-x: clip;
 }
+/* phones (no sticky sections there): iOS Safari still lets you pan sideways
+   with only `clip`, so lock it harder */
+@media (max-width: 767px) {
+  html,
+  body {
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
+  }
+}
+
+/* Light/dark is designed by hand: stop phones (dark mode, auto-darkening
+   browsers) from recolouring panels like the cream clock card */
+:root {
+  color-scheme: only light;
+}
