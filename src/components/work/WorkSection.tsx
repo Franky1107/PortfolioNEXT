@@ -51,9 +51,9 @@ export default function WorkSection() {
 
         {/* RIGHT — the project cards scroll past */}
         <ScrollCards
-          // the extra bottom padding (245svh) is the extra scroll length: the cards drift down into it so they pass slower
-          className="overflow-x-clip rounded-[18px] bg-[#0d0d0d] p-3 md:p-[1.4vw] md:pb-[calc(1.4vw+245svh)] motion-reduce:md:pb-[1.4vw]"
-          innerClassName="flex flex-col gap-3 md:gap-[1.4vw]"
+          // --drift is the extra scroll length: the cards drift down into this extra bottom padding so they pass slower
+          className="cards-drift-root overflow-x-clip rounded-[18px] bg-[#0d0d0d] p-3 [--drift:245svh] md:p-[1.4vw] md:pb-[calc(1.4vw+var(--drift))] motion-reduce:md:pb-[1.4vw]"
+          innerClassName="cards-drift flex flex-col gap-3 md:gap-[1.4vw]"
           helix
         >
           <div className="flex items-baseline justify-between px-2 pt-3 font-mono text-[11px] uppercase tracking-[0.12em] text-white/50 md:px-[0.6vw] md:pt-[0.6vw] md:text-[12px]">

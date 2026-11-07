@@ -64,11 +64,15 @@ export default function ScrollCards({
     const at = (card: HTMLElement, frac: number) => () => scrollAt(card, window.innerHeight * frac);
 
     const ctx = gsap.context(() => {
-      gsap.fromTo(
-        inner,
-        { y: 0 },
-        { y: () => extra(), ease: "none", scrollTrigger: { trigger: root, start: "top top", end: "bottom bottom", scrub: true, invalidateOnRefresh: true } },
-      );
+      // The drift itself runs as a CSS scroll-driven animation (.cards-drift in
+      // globals.css): the browser moves the cards in the same frame as the
+      // scroll, so it's smooth. Older browsers get this JS version instead.
+      if (!CSS.supports("animation-timeline: view()"))
+        gsap.fromTo(
+          inner,
+          { y: 0 },
+          { y: () => extra(), ease: "none", scrollTrigger: { trigger: root, start: "top top", end: "bottom bottom", scrub: true, invalidateOnRefresh: true } },
+        );
 
       root.querySelectorAll<HTMLElement>(".project-card").forEach((card) => {
         const media = card.querySelector<HTMLElement>(".project-media");

@@ -511,3 +511,24 @@ body {
 :root {
   color-scheme: only light;
 }
+
+/* Projects: the cards drift down by --drift while their panel fills the
+   screen, so they pass at about half speed (see ScrollCards). Driven by the
+   scroll itself, so it moves in step with the page — no jitter. */
+@keyframes cards-drift {
+  to {
+    translate: 0 var(--drift);
+  }
+}
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .cards-drift-root {
+      view-timeline-name: --cards;
+    }
+    .cards-drift {
+      animation: cards-drift linear both;
+      animation-timeline: --cards;
+      animation-range: contain 0% contain 100%;
+    }
+  }
+}
