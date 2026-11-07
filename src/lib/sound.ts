@@ -193,12 +193,14 @@ export function initSound() {
 
   if (saved === "on") {
     set({ on: true });
-    // browsers only allow audio after the visitor interacts with the page
-    const kick = () => {
+    // browsers only allow audio after the visitor interacts with the page;
+    // resume on their first click/tap in the first (hero) section only
+    const kick = (e: Event) => {
+      if (!(e.target as Element | null)?.closest?.("#top")) return;
       if (state.on && !state.playing) startMusic();
       gestures.forEach((g) => window.removeEventListener(g, kick, true));
     };
-    const gestures = ["pointerdown", "keydown", "touchstart"];
+    const gestures = ["pointerdown", "touchstart"];
     gestures.forEach((g) => on(window, g, kick, { capture: true }));
   }
 

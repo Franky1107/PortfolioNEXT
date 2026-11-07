@@ -13,8 +13,9 @@ const getLoadedServer = () => false;
 
 /**
  * After the loading screen — until the visitor first plays (or turns off) the music — the cursor becomes a small square with
- * "CLICK TO ENABLE SOUND", and clicking anywhere (outside links and buttons)
- * turns the music on. Mouse / trackpad only — never on touch screens.
+ * "CLICK TO ENABLE SOUND", and clicking (outside links and buttons) turns the
+ * music on — in the first (hero) section only; elsewhere the normal cursor
+ * shows and clicks do nothing. Mouse / trackpad only — never on touch screens.
  */
 export default function CursorPrompt() {
   const { playing, prompt } = useSyncExternalStore(subscribe, getState, getServerState);
@@ -29,7 +30,7 @@ export default function CursorPrompt() {
     if (!fine || !el || !active) return;
 
     const html = document.documentElement;
-    html.classList.add("cursor-prompt");
+    const inHero = (t: EventTarget | null) => !!(t as Element | null)?.closest?.("#top");
     let x = -100;
     let y = -100;
     let raf = 0;
@@ -43,12 +44,14 @@ export default function CursorPrompt() {
       if (e.pointerType !== "mouse") return;
       x = e.clientX;
       y = e.clientY;
-      el.dataset.visible = isInteractive(e.target) ? "0" : "1";
+      const on = inHero(e.target);
+      html.classList.toggle("cursor-prompt", on); // custom cursor only over the hero
+      el.dataset.visible = on && !isInteractive(e.target) ? "1" : "0";
       if (!raf) raf = requestAnimationFrame(draw);
     };
     const onLeave = () => (el.dataset.visible = "0");
     const onClick = (e: MouseEvent) => {
-      if (isInteractive(e.target) || getState().playing) return;
+      if (!inHero(e.target) || isInteractive(e.target) || getState().playing) return;
       startSound();
     };
 
