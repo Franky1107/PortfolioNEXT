@@ -30,7 +30,6 @@ const Arrow = ({ className = "" }: { className?: string }) => (
  * - mobile: logo, "Let's Connect" and a menu button that opens the links
  */
 export default function Nav() {
-  const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
   // ambient sound: restore the visitor's choice + hover/click sounds
@@ -52,23 +51,11 @@ export default function Nav() {
     return () => document.removeEventListener("click", onClick);
   }, []);
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  const solid = scrolled || open;
-
   return (
     <header
+      // fully transparent (no tint, blur or border) — solid only while the phone menu is open, so its links stay readable
       className={`fixed inset-x-0 top-0 z-50 border-b transition-[background-color,border-color,backdrop-filter] duration-300 ${
-        open
-          ? "border-white/10 bg-black/90 backdrop-blur-xl"
-          : solid
-            ? "border-white/10 bg-black/55 backdrop-blur-xl"
-            : "border-transparent bg-transparent"
+        open ? "border-white/10 bg-black/90 backdrop-blur-xl" : "border-transparent bg-transparent"
       }`}
     >
       <div className="relative flex h-16 items-center justify-between px-5 md:h-[72px] md:px-[3vw]">
