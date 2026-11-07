@@ -532,3 +532,28 @@ body {
     }
   }
 }
+
+/* Let's talk form: rises in as the thread straightens */
+.contact-dialog[open] {
+  animation: contact-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.contact-dialog[open]::backdrop {
+  animation: contact-fade 0.4s ease both;
+}
+@keyframes contact-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+}
+@keyframes contact-fade {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .contact-dialog[open],
+  .contact-dialog[open]::backdrop {
+    animation: none;
+  }
+}
