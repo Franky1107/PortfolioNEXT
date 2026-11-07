@@ -48,6 +48,18 @@ const SOCIALS = [
     icon: "M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.09 0 4.42-2.7 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z",
   },
   {
+    label: "LinkedIn",
+    href: "https://www.linkedin.com/in/sourav-mallick1107",
+    evenodd: true,
+    icon: "M4 2h16a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm3.5 3.9a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6ZM6.3 9.5v8.3h2.4V9.5H6.3Zm4.5 0v8.3h2.4v-4.2c0-1.2.8-2 1.9-2 1 0 1.3.8 1.3 1.9v4.3h2.4v-4.8c0-2.2-.8-3.7-3-3.7-1.1 0-2.2.5-2.7 1.4V9.5h-2.3Z",
+  },
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/mso_urav07",
+    evenodd: true,
+    icon: "M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5Zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7Zm5 3a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm5.5-3.75a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5Z",
+  },
+  {
     label: "Email",
     href: "mailto:souravmallick900@gmail.com",
     icon: "M2 5.5A1.5 1.5 0 0 1 3.5 4h17A1.5 1.5 0 0 1 22 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-17A1.5 1.5 0 0 1 2 18.5v-13Zm2 .9v.3l8 5.3 8-5.3v-.3H4Zm16 2.7-7.45 4.94a1 1 0 0 1-1.1 0L4 9.1V18h16V9.1Z",
@@ -291,22 +303,22 @@ export default function ContactSection() {
           </svg>
         </button>
 
-        <div className="mt-auto flex items-center justify-between gap-6 pt-16 font-mono text-[11px] uppercase tracking-[0.12em] text-white/80 md:text-[12px]">
-          <a href="#top" className="inline-flex items-center gap-3 hover:text-accent">
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-x-6 gap-y-5 pt-16 font-mono text-[11px] uppercase tracking-[0.12em] text-white/80 md:text-[12px]">
+          <a href="#top" className="inline-flex items-center gap-3 whitespace-nowrap hover:text-accent">
             Back to top <span aria-hidden>↑</span>
           </a>
-          <ul className="flex items-center gap-5" aria-label="Socials">
+          <ul className="flex items-center gap-4 md:gap-5" aria-label="Socials">
             {SOCIALS.map((s) => (
               <li key={s.label}>
                 <a href={s.href} target="_blank" rel="noreferrer" aria-label={s.label} className="block text-white/80 transition-colors hover:text-accent">
                   <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden>
-                    <path d={s.icon} />
+                    <path d={s.icon} fillRule={"evenodd" in s ? "evenodd" : undefined} />
                   </svg>
                 </a>
               </li>
             ))}
           </ul>
-          <p className="text-white/40">© Sourav Mallick</p>
+          <p className="whitespace-nowrap text-white/40">© Sourav Mallick</p>
         </div>
       </div>
 
