@@ -19,7 +19,7 @@ export default function WorkSection() {
         {/* LEFT — stays in place on desktop */}
         <aside
           data-helix-left
-          className="flex flex-col rounded-[18px] bg-[#fdf8f4] p-6 text-[#1a0f0a] md:sticky md:top-[calc(72px+1.4vw)] md:h-[calc(100svh-72px-2.8vw)] md:p-[2vw]"
+          className="flex flex-col rounded-[18px] bg-[#fdf8f4] p-6 text-[#1a0f0a] md:sticky md:top-[1.4vw] md:h-[calc(100svh-2.8vw)] md:p-[2vw]"
         >
           <p className="text-center font-mono text-[11px] uppercase tracking-[0.12em] md:text-[12px]">India · IST</p>
 
