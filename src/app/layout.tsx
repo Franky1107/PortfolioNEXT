@@ -16,6 +16,9 @@ export const metadata: Metadata = {
   title: "Sourav Mallick — Software Engineer",
   description:
     "Software Engineer working across data engineering, AI and intelligent systems, transforming complex data into meaningful solutions.",
+  // Dark Reader (and Brave's Night Mode, which is built on it) skips pages with
+  // this tag, so it can't repaint the site's hand-picked colours
+  other: { "darkreader-lock": "true" },
 };
 
 export default function RootLayout({
