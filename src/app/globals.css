@@ -30,7 +30,7 @@ html {
   /* keep room for the scrollbar at all times, so the page width doesn't jump
      when the loading screen hides/shows it (that would re-measure the thread) */
   scrollbar-gutter: stable;
-  scroll-behavior: smooth;
+  /* no CSS smooth scrolling: in-page links use a slower GSAP scroll (see Nav) */
 }
 
 body {
@@ -133,7 +133,6 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .thread-ring { transition: none; }
   .is-on > .thread-ring .halo { animation: none; opacity: 0.35; }
-  html { scroll-behavior: auto; }
   .thread-node.is-lit .glow { animation: none; opacity: 0.85; }
   [data-thread-reveal] { transition: none; }
 }

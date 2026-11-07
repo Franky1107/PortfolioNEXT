@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRef } from "react";
-import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
+import { gsap, navTargets, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
 import { THREAD } from "@/lib/thread/config";
 import { moveTo, smoothCommands } from "@/lib/thread/geometry";
 import { SCROLL_WORD } from "@/lib/thread/scrollWord";
@@ -128,16 +128,10 @@ export default function AboutSection({ content = ABOUT }: { content?: AboutConte
 
       const mm = gsap.matchMedia();
 
-      // "About" links jump to the END of the pinned sequence (everything shown),
-      // not its start; without a pin (phones, reduced motion) the normal anchor jump is fine
+      // "About" links land at the END of the pinned sequence (everything shown);
+      // without a pin (phones, reduced motion) they go to the section's top
       let pin: ScrollTrigger | undefined;
-      const onAboutLink = (e: MouseEvent) => {
-        if (!pin || !(e.target instanceof Element) || !e.target.closest('a[href="#about"]')) return;
-        e.preventDefault();
-        window.scrollTo({ top: pin.end, behavior: "instant" });
-        history.replaceState(null, "", "#about");
-      };
-      document.addEventListener("click", onAboutLink);
+      navTargets["#about"] = () => pin?.end ?? section.getBoundingClientRect().top + window.scrollY;
 
       // reduced motion on desktop: the thread and the word are simply there
       mm.add("(min-width: 768px) and (prefers-reduced-motion: reduce)", () => {
@@ -291,7 +285,7 @@ export default function AboutSection({ content = ABOUT }: { content?: AboutConte
           };
         },
       );
-      return () => document.removeEventListener("click", onAboutLink);
+      return () => delete navTargets["#about"];
     },
     { scope: root, dependencies: [content] },
   );

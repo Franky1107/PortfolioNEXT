@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import SoundToggle from "./SoundToggle";
 import MenuIsland from "./MenuIsland";
 import { initSound } from "@/lib/sound";
+import { navTargets, smoothScrollTo } from "@/lib/gsap";
 
 // Edit the links here. "#name" scrolls to the section with id="name".
 const LINKS = [
@@ -31,6 +32,23 @@ export default function Nav() {
 
   // ambient sound: restore the visitor's choice + hover/click sounds
   useEffect(() => initSound(), []);
+
+  // in-page links ("#about", …) glide slowly instead of the browser's quick jump
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      const a = e.target instanceof Element ? e.target.closest<HTMLAnchorElement>('a[href^="#"]') : null;
+      const hash = a?.getAttribute("href");
+      if (!hash || hash.length < 2) return;
+      const el = document.getElementById(hash.slice(1));
+      if (!el) return; // no such section (yet): leave the link alone
+      e.preventDefault();
+      const target = navTargets[hash];
+      smoothScrollTo(target ? target() : el.getBoundingClientRect().top + window.scrollY);
+      history.replaceState(null, "", hash);
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
