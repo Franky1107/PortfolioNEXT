@@ -44,7 +44,6 @@ export default function Nav() {
       e.preventDefault();
       const target = navTargets[hash];
       smoothScrollTo(target ? target() : el.getBoundingClientRect().top + window.scrollY);
-      history.replaceState(null, "", hash);
     };
     document.addEventListener("click", onClick);
     return () => document.removeEventListener("click", onClick);

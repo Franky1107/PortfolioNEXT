@@ -29,6 +29,8 @@ export default function Loader() {
     // Always start at the top: stop the browser restoring the old scroll
     // position on refresh (it would show once the loader closes)
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    // ...and drop any "#section" from the URL: a refresh always opens the homepage
+    if (location.hash) history.replaceState(null, "", location.pathname + location.search);
     const toTop = () => window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
     toTop();
 
@@ -36,9 +38,6 @@ export default function Loader() {
       toTop();
       setClosing(true);
       html.style.overflow = "";
-      // a link like /#projects still jumps to its section once loading is done
-      const target = location.hash ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null;
-      if (target) target.scrollIntoView();
       html.dataset.loaded = "1";
       window.dispatchEvent(new Event("loader:done"));
       later(() => {
