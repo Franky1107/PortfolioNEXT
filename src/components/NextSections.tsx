@@ -1,5 +1,4 @@
 // Simple placeholder sections so the nav and funnel links have somewhere to go.
-import AboutSection from "./AboutSection";
 
 // Replace each one with the real section when you build it — and extend the
 // thread into it (see src/lib/thread/segments.ts).
@@ -11,8 +10,6 @@ const SECTIONS = [
 export default function NextSections() {
   return (
     <>
-      <AboutSection />
-
       {SECTIONS.map((s) => (
         <section key={s.id} id={s.id} className="flex min-h-[60svh] flex-col justify-center border-t border-white/10 px-5 py-20 md:px-[3vw]">
           <h2 className="type-heavy text-[11vw] uppercase leading-none md:text-[5vw]">{s.title}</h2>
