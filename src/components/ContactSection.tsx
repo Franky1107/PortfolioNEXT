@@ -15,7 +15,7 @@ import type { Pt } from "@/lib/thread/types";
  * opens. Close the form and the thread springs back into its knot.
  */
 const CONTACT = {
-  lines: ["Got something", "in your mind?", "Let’s", "connect."],
+  lines: ["Got", "something", "in your mind?", "Let’s", "connect."],
   // the form opens the visitor's mail app addressed to this
   email: "souravmallick900@gmail.com",
 };
@@ -283,9 +283,9 @@ export default function ContactSection() {
 
       {/* LEFT — headline, let's talk, back to top */}
       <div className="relative z-20 flex flex-col">
-        <h2 className="type-heavy text-[14vw] uppercase leading-[0.9] md:text-[length:min(7.4vw,14svh)]">
+        <h2 className="type-heavy whitespace-nowrap text-[9.4vw] uppercase leading-[0.9] md:text-[length:min(5.6vw,11svh)]">
           {CONTACT.lines.map((l, i) => (
-            <span key={l} className="block" style={{ paddingLeft: `${[0, 0.6, 0.15, 0.4][i % 4]}em` }}>
+            <span key={l} className="block" style={{ paddingLeft: `${[0, 0, 0.5, 0.15, 0.4][i]}em` }}>
               {l}
             </span>
           ))}
