@@ -90,7 +90,7 @@ function ProjectCard({ project: p, index }: { project: Project; index: number })
       <div className="flex flex-col gap-1 px-1 pb-1 pt-4 md:flex-row md:items-baseline md:justify-between md:gap-6">
         <h3 className="type-heavy text-[clamp(1.4rem,2.2vw,2rem)] leading-none">{p.name}</h3>
         <p className="shrink-0 font-mono text-[11px] uppercase tracking-[0.1em] text-white/55 md:text-[12px]">
-          {p.type} · {p.year}
+          {[p.type, p.year].filter(Boolean).join(" · ")}
         </p>
       </div>
       <p className="px-1 pb-1 pt-2 text-[14px] leading-snug text-white/65">{p.description}</p>
