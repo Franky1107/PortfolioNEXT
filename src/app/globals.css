@@ -140,10 +140,6 @@ body {
 /* ------------------------------------------------------------------
    LOADING SCREEN — greetings in several languages (from the original
    portfolio). Shown on page load, then wipes up out of the way.
-   The greetings are CSS animations, so they start with the first paint
-   and keep going round while the page loads (not only once its JavaScript
-   is ready). Their timing is set in src/components/Loader.tsx, which also
-   stops them and closes the screen.
    ------------------------------------------------------------------ */
 #loader {
   position: fixed;
@@ -180,47 +176,16 @@ body {
   white-space: nowrap;
   opacity: 0;
   transform: translateY(30px) rotateX(40deg);
-  /* its turn in the round, again and again until the page is ready */
-  animation: loader-word linear infinite;
+  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
-/* "Hello" is there from the start: it first only leaves, then joins the round */
-.loader-word:first-child {
+.loader-word.active {
   opacity: 1;
-  transform: none;
-  animation: loader-word-out ease-in forwards, loader-word linear infinite;
+  transform: translateY(0) rotateX(0deg);
 }
-/* One round = 9 greetings, so each one's turn is 1/9 of it (11.111%): it
-   comes in during its own turn and leaves at the start of the next one's.
-   (Add or remove a greeting in Loader.tsx → change these two numbers to
-   100 ÷ count and 180 ÷ count.) */
-@keyframes loader-word {
-  0% { opacity: 0; transform: translateY(30px) rotateX(40deg); animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
-  11.111% { opacity: 1; transform: translateY(0) rotateX(0deg); animation-timing-function: ease-in; }
-  20%, 100% { opacity: 0; transform: translateY(-30px) rotateX(-40deg); }
-}
-@keyframes loader-word-out {
-  to { opacity: 0; transform: translateY(-30px) rotateX(-40deg); }
-}
-/* the page is ready: stop on the greeting that is showing (the others go) */
-.loader-word.is-held,
-.loader-word.is-out {
-  animation: none;
-  transition: opacity 0.15s ease, transform 0.15s ease;
-}
-.loader-word.is-held {
-  opacity: 1;
-  transform: none;
-}
-.loader-word.is-out {
+.loader-word.exit {
   opacity: 0;
   transform: translateY(-30px) rotateX(-40deg);
-}
-@media (prefers-reduced-motion: reduce) {
-  /* just "Hello": the screen closes as soon as the page is ready */
-  .loader-word,
-  .loader-word:first-child {
-    animation: none;
-  }
+  transition: opacity 0.2s ease, transform 0.25s ease-in;
 }
 
 /* ------------------------------------------------------------------
