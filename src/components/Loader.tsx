@@ -1,17 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * Loading screen: a black screen that flashes a greeting in several
  * languages (from the original portfolio), then closes upwards.
  * When it starts closing it tells the rest of the page (the thread waits
  * for this before drawing itself) via the "loader:done" event.
- *
- * The greetings are plain CSS animations (see globals.css), so they start
- * with the very first paint — while the page's JavaScript is still loading.
- * The code below only closes the screen: as soon as the greetings have
- * played AND the page is ready, whichever comes last.
  */
 const WORDS = ["Hello", "Bonjour", "Hola", "Ciao", "Привет", "你好", "こんにちは", "नमस्ते", "ନମସ୍କାର"];
 const LANGS = ["en", "fr", "es", "it", "ru", "zh", "ja", "hi", "or"];
@@ -19,13 +14,9 @@ const WORD_MS = 250; // time each greeting is shown
 const START_MS = 350; // "Hello" stays a little longer at the start
 const HOLD_MS = 200; // pause after the last word
 const CLOSE_MS = 700; // closing animation (matches the CSS)
-// when the greetings are over, counted from the first paint
-const GREET_MS = START_MS + (WORDS.length - 1) * WORD_MS + HOLD_MS;
-// when each word comes in and goes out (the first is there from the start, the last one stays)
-const wordTimes = (i: number) => `${START_MS + (i - 1) * WORD_MS}ms, ${START_MS + i * WORD_MS}ms`;
 
 export default function Loader() {
-  const ref = useRef<HTMLDivElement>(null);
+  const [word, setWord] = useState(0);
   const [closing, setClosing] = useState(false);
   const [gone, setGone] = useState(false);
 
@@ -56,24 +47,22 @@ export default function Loader() {
       }, CLOSE_MS + 50);
     };
 
-    // The greetings have been playing in CSS since the first paint. #loader
-    // carries a silent "clock" animation that ends when they are over — wait
-    // for whatever is left of it (nothing, if the page took longer than the
-    // greetings), then close. With reduced motion there is no clock: close now.
-    let cancelled = false;
-    const el = ref.current;
-    if (el && !el.getAnimations) {
-      later(finish, GREET_MS); // very old browser: just wait the full time
+    // one word after another (each step waits for the previous one, so a busy
+    // moment on a slow device delays the words rather than skipping them)
+    const step = (i: number) => {
+      setWord(i);
+      if (i < WORDS.length - 1) later(() => step(i + 1), WORD_MS);
+      else later(finish, WORD_MS + HOLD_MS);
+    };
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      finish();
     } else {
-      const clock = (el?.getAnimations() ?? []).filter((a) => (a as CSSAnimation).animationName === "loader-clock");
-      const go = () => {
-        if (!cancelled) finish();
-      };
-      Promise.all(clock.map((a) => a.finished)).then(go, go);
+      // "Hello", then the rest of the greetings one after another
+      later(() => step(1), START_MS);
     }
 
     return () => {
-      cancelled = true;
       timers.forEach(clearTimeout);
       html.style.overflow = "";
     };
@@ -82,18 +71,10 @@ export default function Loader() {
   if (gone) return null;
 
   return (
-    <div
-      ref={ref}
-      id="loader"
-      className={closing ? "is-closing" : ""}
-      style={{ animationDuration: `${GREET_MS}ms` }}
-      role="status"
-      aria-label="Loading"
-      aria-hidden={closing}
-    >
+    <div id="loader" className={closing ? "is-closing" : ""} role="status" aria-label="Loading" aria-hidden={closing}>
       <div className="loader-words">
         {WORDS.map((w, i) => (
-          <span key={w} lang={LANGS[i]} className="loader-word" style={{ animationDelay: wordTimes(i) }}>
+          <span key={w} lang={LANGS[i]} className={`loader-word ${i === word ? "active" : ""} ${i < word ? "exit" : ""}`}>
             {w}
           </span>
         ))}
