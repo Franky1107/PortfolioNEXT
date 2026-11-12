@@ -140,6 +140,9 @@ body {
 /* ------------------------------------------------------------------
    LOADING SCREEN — greetings in several languages (from the original
    portfolio). Shown on page load, then wipes up out of the way.
+   The greetings are CSS animations, so they start with the first paint
+   (not when the page's JavaScript is ready). Their timing is set in
+   src/components/Loader.tsx, which also closes the screen.
    ------------------------------------------------------------------ */
 #loader {
   position: fixed;
@@ -151,6 +154,9 @@ body {
   background: #000;
   clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
   transition: clip-path 0.7s cubic-bezier(0.76, 0, 0.24, 1);
+  /* a silent clock (changes nothing on screen): it ends when the greetings
+     are over, and Loader.tsx waits for it before closing the screen */
+  animation: loader-clock linear both;
 }
 #loader.is-closing {
   clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
@@ -176,16 +182,39 @@ body {
   white-space: nowrap;
   opacity: 0;
   transform: translateY(30px) rotateX(40deg);
-  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  /* comes in, then goes out — each word's two start times are set in Loader.tsx */
+  animation:
+    loader-word-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both,
+    loader-word-out 0.25s ease-in forwards;
 }
-.loader-word.active {
+/* "Hello" is there from the start: it only goes out */
+.loader-word:first-child {
   opacity: 1;
-  transform: translateY(0) rotateX(0deg);
+  transform: none;
+  animation-name: none, loader-word-out;
 }
-.loader-word.exit {
-  opacity: 0;
-  transform: translateY(-30px) rotateX(-40deg);
-  transition: opacity 0.2s ease, transform 0.25s ease-in;
+/* the last greeting stays until the screen closes: it only comes in */
+.loader-word:last-child {
+  animation-name: loader-word-in, none;
+}
+@keyframes loader-word-in {
+  to { opacity: 1; transform: translateY(0) rotateX(0deg); }
+}
+@keyframes loader-word-out {
+  to { opacity: 0; transform: translateY(-30px) rotateX(-40deg); }
+}
+@keyframes loader-clock {
+  from { opacity: 1; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* just "Hello", and no clock: the screen closes as soon as the page is ready */
+  #loader,
+  .loader-word,
+  .loader-word:first-child,
+  .loader-word:last-child {
+    animation: none;
+  }
 }
 
 /* ------------------------------------------------------------------

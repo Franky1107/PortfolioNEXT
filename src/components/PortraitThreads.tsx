@@ -18,6 +18,12 @@ const PTS = 26; // points per thread
 const THREADS = 560; // how many threads make up the figure
 const FORM_MS = 1300; // time to untangle into the figure
 const AUTO_HOLD_MS = 2800; // how long the automatic reveal holds
+// Sharpness: the canvas may use up to this many pixels. A phone's canvas is
+// small, so it gets the screen's full sharpness (a stretched low-res canvas
+// turns the fine white threads into a grey blur); the big desktop canvas
+// stays at 1.25× so it isn't slow to fill.
+const MAX_CANVAS_PX = 1_100_000;
+const FULL_SIZE = 380; // figure scale (px) on a desktop screen — thread width is tuned for this
 
 type V3 = { x: number; y: number; z: number };
 type Thread = { body: V3[]; normal: V3[]; ball: V3[]; delay: number; seed: number };
@@ -232,7 +238,6 @@ export default function PortraitThreads({ className = "" }: { className?: string
       const r = wrap.getBoundingClientRect();
       const vw = document.documentElement.clientWidth;
       const sec = wrap.closest("section")?.getBoundingClientRect();
-      dpr = Math.min(1.25, window.devicePixelRatio || 1); // fine threads look the same; far fewer pixels to fill
       W = r.width;
       H = r.height;
       L = Math.max(0, Math.min(r.left - 4, W * 1.2));
@@ -241,6 +246,8 @@ export default function PortraitThreads({ className = "" }: { className?: string
       B = Math.max(0, Math.min(sec ? sec.bottom - r.bottom : 0, H * 0.6));
       const cw = W + L + R;
       const ch = H + T + B;
+      // as sharp as the screen, within the pixel budget (see MAX_CANVAS_PX)
+      dpr = Math.min(window.devicePixelRatio || 1, 3, Math.max(1.25, Math.sqrt(MAX_CANVAS_PX / Math.max(1, cw * ch))));
       canvas.width = Math.round(cw * dpr);
       canvas.height = Math.round(ch * dpr);
       Object.assign(canvas.style, { left: `${-L}px`, top: `${-T}px`, width: `${cw}px`, height: `${ch}px` });
@@ -308,17 +315,23 @@ export default function PortraitThreads({ className = "" }: { className?: string
       const pullX = (dx * lean) / S;
       const pullY = (-dy * lean) / S;
 
-      // Pieces are grouped into a few brightness levels and each level is
-      // stroked once — ~16 strokes a frame instead of thousands.
+      // Pieces are grouped into a few brightness levels, and each level into a
+      // few groups of threads; every group is stroked once — a couple of
+      // hundred strokes a frame instead of thousands.
+      // Why the groups: lines drawn in ONE stroke don't brighten where they
+      // cross (the stroke is one flat shape), so a single stroke per level
+      // gave a flat grey figure on phones. Threads in different groups do add
+      // up where they cross — that is what makes the tangle glow white.
       const LEVELS = 16;
+      const GROUPS = 16;
       const MAX_A = 0.9;
-      const paths = Array.from({ length: LEVELS }, () => new Path2D());
+      const paths = Array.from({ length: LEVELS * GROUPS }, () => new Path2D());
       const xs = new Float32Array(PTS);
       const ys = new Float32Array(PTS);
-      const addPiece = (from: number, to: number, a: number) => {
+      const addPiece = (from: number, to: number, a: number, group: number) => {
         const lvl = Math.min(LEVELS - 1, Math.round((Math.min(MAX_A, a) / MAX_A) * (LEVELS - 1)));
         if (lvl <= 0) return;
-        const path = paths[lvl];
+        const path = paths[lvl * GROUPS + group];
         path.moveTo(xs[from], ys[from]);
         for (let k = from + 1; k <= to; k++) path.lineTo(xs[k], ys[k]);
       };
@@ -360,22 +373,24 @@ export default function PortraitThreads({ className = "" }: { className?: string
           // fades towards the bottom of the chest, like the reference
           const fade = smooth(Math.min(1, Math.max(0, (b.y - Y0) / 0.8)));
           const headBoost = b.y > 0.45 ? 1.6 : b.y > 0.2 ? 1 : 0.75; // the head is the brightest part, like the reference
-          const figureA = (0.05 + 0.06 * rim + 0.27 * lit + 0.32 * top) * back * fade * headBoost;
-          alphaSum += figureA * m + 0.16 * (1 - m);
+          const figureA = 1.8 * (0.05 + 0.06 * rim + 0.27 * lit + 0.32 * top) * back * fade * headBoost;
+          alphaSum += figureA * m + 0.3 * (1 - m);
           count++;
           // end of a piece → file it under its brightness, start the next one here
           if ((j > 0 && j % per === 0) || j === PTS - 1) {
-            addPiece(pieceStart, j, alphaSum / count);
+            addPiece(pieceStart, j, alphaSum / count, i % GROUPS);
             pieceStart = j;
             alphaSum = 0;
             count = 0;
           }
         }
       }
-      ctx.lineWidth = 0.8;
+      // threads get finer as the figure gets smaller (phones), so they stay
+      // separate white wires instead of merging into a haze
+      ctx.lineWidth = 0.9 * Math.min(1, Math.max(0.6, S / FULL_SIZE));
       for (let l = 1; l < LEVELS; l++) {
-        ctx.strokeStyle = `rgba(235,235,235,${((l / (LEVELS - 1)) * MAX_A).toFixed(3)})`;
-        ctx.stroke(paths[l]);
+        ctx.strokeStyle = `rgba(255,255,255,${((l / (LEVELS - 1)) * MAX_A).toFixed(3)})`;
+        for (let g = 0; g < GROUPS; g++) ctx.stroke(paths[l * GROUPS + g]);
       }
       ctx.globalCompositeOperation = "source-over";
     };
