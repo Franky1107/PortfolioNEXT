@@ -387,7 +387,12 @@ export default function PortraitThreads({ className = "" }: { className?: string
       }
       // threads get finer as the figure gets smaller (phones), so they stay
       // separate white wires instead of merging into a haze
-      ctx.lineWidth = 0.9 * Math.min(1, Math.max(0.6, S / FULL_SIZE));
+      let lineWidth = 0.9 * Math.min(1, Math.max(0.6, S / FULL_SIZE));
+      // On a computer screen (big canvas, low sharpness) a thread is never wider
+      // than one screen pixel: browsers draw such hairlines many times faster
+      // than wider lines — 0.9 at 125% zoom was just over, and made PCs slow.
+      if (dpr <= 1.25) lineWidth = Math.min(lineWidth, 1 / dpr);
+      ctx.lineWidth = lineWidth;
       for (let l = 1; l < LEVELS; l++) {
         ctx.strokeStyle = `rgba(255,255,255,${((l / (LEVELS - 1)) * MAX_A).toFixed(3)})`;
         for (let g = 0; g < GROUPS; g++) ctx.stroke(paths[l * GROUPS + g]);
@@ -397,10 +402,15 @@ export default function PortraitThreads({ className = "" }: { className?: string
 
     let raf = 0;
     let visible = true;
+    // Nothing to draw while the loading screen still covers the page — and
+    // drawing behind it would only slow the greetings down on a slow computer
+    let covered = !document.documentElement.dataset.loaded && !!document.getElementById("loader");
+    const onUncovered = () => (covered = false);
+    if (covered) window.addEventListener("loader:done", onUncovered, { once: true });
     // ~30 fps is plenty for slow-moving threads and halves the drawing work
     let lastDraw = 0;
     const loop = (now: number) => {
-      if (now - lastDraw >= 31) {
+      if (!covered && now - lastDraw >= 31) {
         lastDraw = now;
         draw(now);
       }
@@ -465,6 +475,7 @@ export default function PortraitThreads({ className = "" }: { className?: string
       window.removeEventListener("resize", resize);
       io.disconnect();
       window.removeEventListener("loader:gone", onLoaded);
+      window.removeEventListener("loader:done", onUncovered);
       window.removeEventListener("pointermove", onMove);
       wrap.removeEventListener("pointerenter", onEnter);
       wrap.removeEventListener("pointerleave", onLeave);
