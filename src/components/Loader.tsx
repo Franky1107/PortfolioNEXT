@@ -7,11 +7,15 @@ import { useEffect, useState } from "react";
  * languages (from the original portfolio), then closes upwards.
  * When it starts closing it tells the rest of the page (the thread waits
  * for this before drawing itself) via the "loader:done" event.
+ *
+ * While the page is still loading it shows WAIT_TEXT; the greetings start
+ * once the page is ready.
  */
-const WORDS = ["Hello", "Bonjour", "Hola", "Ciao", "Привет", "你好", "こんにちは", "नमस्ते", "ନମସ୍କାର"];
-const LANGS = ["en", "fr", "es", "it", "ru", "zh", "ja", "hi", "or"];
+const WAIT_TEXT = "wait for a moment......."; // shown while the page loads
+const WORDS = [WAIT_TEXT, "Hello", "Bonjour", "Hola", "Ciao", "Привет", "你好", "こんにちは", "नमस्ते", "ନମସ୍କାର"];
+const LANGS = ["en", "en", "fr", "es", "it", "ru", "zh", "ja", "hi", "or"];
 const WORD_MS = 250; // time each greeting is shown
-const START_MS = 350; // "Hello" stays a little longer at the start
+const START_MS = 350; // the wait text stays this long after the page is ready
 const HOLD_MS = 200; // pause after the last word
 const CLOSE_MS = 700; // closing animation (matches the CSS)
 
@@ -58,7 +62,7 @@ export default function Loader() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       finish();
     } else {
-      // "Hello", then the rest of the greetings one after another
+      // the wait text, then "Hello" and the rest of the greetings one after another
       later(() => step(1), START_MS);
     }
 
@@ -74,7 +78,11 @@ export default function Loader() {
     <div id="loader" className={closing ? "is-closing" : ""} role="status" aria-label="Loading" aria-hidden={closing}>
       <div className="loader-words">
         {WORDS.map((w, i) => (
-          <span key={w} lang={LANGS[i]} className={`loader-word ${i === word ? "active" : ""} ${i < word ? "exit" : ""}`}>
+          <span
+            key={w}
+            lang={LANGS[i]}
+            className={`loader-word ${i === 0 ? "loader-wait" : ""} ${i === word ? "active" : ""} ${i < word ? "exit" : ""}`}
+          >
             {w}
           </span>
         ))}

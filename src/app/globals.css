@@ -178,6 +178,12 @@ body {
   transform: translateY(30px) rotateX(40deg);
   transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
+/* the "wait for a moment" text (shown while the page loads): it is much
+   longer than a greeting, so it is smaller to fit on a phone screen */
+.loader-word.loader-wait {
+  font-size: clamp(1.15rem, 4.2vw, 2.25rem);
+  letter-spacing: 0;
+}
 .loader-word.active {
   opacity: 1;
   transform: translateY(0) rotateX(0deg);
