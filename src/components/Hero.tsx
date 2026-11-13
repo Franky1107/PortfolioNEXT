@@ -1,4 +1,4 @@
-import PortraitThreads from "./PortraitThreads";
+import AvatarModel from "./AvatarModel";
 import StretchName from "./StretchName";
 
 const TAGLINE = "and I am not perfect";
@@ -40,9 +40,9 @@ export default function Hero() {
           </p>
         </div>
 
-        {/* RIGHT — tangled threads that untangle into a person's outline on hover / tap */}
+        {/* RIGHT — my 3D avatar: follows the cursor, blinks, waves on hover / tap */}
         <div data-thread="photo" className="relative ml-auto aspect-[413/520] w-[72%] self-start md:w-full">
-          <PortraitThreads className="h-full w-full" />
+          <AvatarModel className="h-full w-full" />
         </div>
       </div>
     </section>
