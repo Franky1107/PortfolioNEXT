@@ -60,7 +60,7 @@ export default function Nav() {
     >
       <div className="relative flex h-16 items-center justify-between px-5 md:h-[72px] md:px-[3vw]">
         {/* Logo */}
-        <a href="#top" aria-label="Sourav Mallick — home" className="type-wide text-[1.2rem] leading-none tracking-tight">
+        <a href="#top" aria-label="Sourav Mallick — home" className="type-wide text-[1.2rem] leading-none tracking-tight [-webkit-text-stroke:3px_#000] [paint-order:stroke_fill]">
           SM
         </a>
 
